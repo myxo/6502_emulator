@@ -1,0 +1,9 @@
+[package]
+name = "cpu_emu"
+version = "0.1.0"
+authors = ["myxo <klimov.ns@mail.ru>"]
+edition = "2021"
+
+[dependencies]
+asm6502 = "0.1.2"
+assert = "0.0.4"
