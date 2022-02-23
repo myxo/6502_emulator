@@ -8,8 +8,15 @@ pub enum Code {
 
 #[derive(Clone, Copy)]
 pub enum AddressMode {
+    Absolute,
+    AbsoluteX,
+    AbsoluteY,
     ImmediateAddress,
+    IndirectX,
+    IndirectY,
     ZeroPage,
+    ZeroPageX,
+    ZeroPageY,
 }
 
 #[derive(Clone, Copy)]
@@ -36,8 +43,14 @@ impl OpDescription {
 lazy_static! {
     pub static ref OPCODE_TABLE: [Option<OpDescription>; 256] = {
         let mut l = [None; 256];
+        l[0xa1] = OpDescription::new(Code::LDA, AddressMode::IndirectX, Byte(2), Cycle(6), "LDA");
         l[0xa5] = OpDescription::new(Code::LDA, AddressMode::ZeroPage, Byte(2), Cycle(3), "LDA");
         l[0xa9] = OpDescription::new(Code::LDA, AddressMode::ImmediateAddress, Byte(2), Cycle(2), "LDA");
+        l[0xad] = OpDescription::new(Code::LDA, AddressMode::Absolute, Byte(3), Cycle(4), "LDA");
+        l[0xb1] = OpDescription::new(Code::LDA, AddressMode::IndirectY, Byte(2), Cycle(5), "LDA");
+        l[0xb5] = OpDescription::new(Code::LDA, AddressMode::ZeroPageX, Byte(2), Cycle(4), "LDA");
+        l[0xb9] = OpDescription::new(Code::LDA, AddressMode::AbsoluteY, Byte(3), Cycle(4), "LDA");
+        l[0xbd] = OpDescription::new(Code::LDA, AddressMode::AbsoluteX, Byte(3), Cycle(4), "LDA");
 
         l
     };
