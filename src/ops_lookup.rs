@@ -3,7 +3,7 @@ use std::option::Option;
 #[derive(Clone, Copy)]
 #[allow(non_snake_case)]
 pub enum Code {
-    LDA
+    LDA,
 }
 
 #[derive(Clone, Copy)]
@@ -26,11 +26,13 @@ struct Byte(u8);
 struct Cycle(u8);
 
 impl OpDescription {
+    #[rustfmt::skip]
     fn new(code: Code, mode: AddressMode, bytes: Byte, cycles: Cycle, name: &'static str) -> Option<OpDescription> {
         Some(OpDescription { code, mode, instruction_bytes: bytes.0, cycles: cycles.0, name})
     }
 }
 
+#[rustfmt::skip]
 lazy_static! {
     pub static ref OPCODE_TABLE: [Option<OpDescription>; 256] = {
         let mut l = [None; 256];

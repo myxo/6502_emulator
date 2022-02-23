@@ -17,11 +17,13 @@ pub struct Bus {
 
 impl Bus {
     pub fn new() -> Self {
-        Bus{ connections: vec![], }
+        Bus {
+            connections: vec![],
+        }
     }
 
     pub fn connect_device(&mut self, device: Weak<dyn Device>, from: u16, to: u16) {
-        self.connections.push(DeviceConnection{device, from, to})
+        self.connections.push(DeviceConnection { device, from, to })
     }
 
     pub fn set_byte(&mut self, byte: u8, offset: u16) {
@@ -38,7 +40,7 @@ impl Bus {
         for conn in &self.connections {
             if offset >= conn.from && offset < conn.to {
                 if let Some(dev) = conn.device.upgrade() {
-                    return dev.get_byte(offset)
+                    return dev.get_byte(offset);
                 }
             }
         }

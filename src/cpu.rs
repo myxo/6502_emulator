@@ -1,5 +1,5 @@
 use crate::bus::Bus;
-use crate::ops_lookup::{OPCODE_TABLE, Code};
+use crate::ops_lookup::{Code, OPCODE_TABLE};
 
 #[derive(Default)]
 pub struct Registers {
@@ -16,9 +16,11 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new() -> Self {
-        Cpu{ ..Default::default() }
+        Cpu {
+            ..Default::default()
+        }
     }
-    
+
     pub fn tick(&mut self, bus: &mut Bus) {
         let op_code = bus.get_byte(self.pc);
         print!("{:#04x} ", op_code);
@@ -43,11 +45,11 @@ impl Cpu {
 
 #[cfg(test)]
 mod tests {
-    use assert::*;
     use super::*;
     use crate::ram::Ram;
     use crate::Device;
     use asm6502::assemble;
+    use assert::*;
     use std::rc::{Rc, Weak};
 
     fn fixture(asm: &'static str) -> (Cpu, Bus, Rc<Ram>) {

@@ -1,21 +1,23 @@
 use crate::bus::Device;
 
 pub struct Ram {
-    memory: Vec<u8>
+    memory: Vec<u8>,
 }
 
 #[derive(Debug)]
-pub struct SetMemoryError{}
+pub struct SetMemoryError {}
 
 impl Ram {
     pub fn new(size: u16) -> Self {
-        Ram { memory: vec![0; size as usize] }
+        Ram {
+            memory: vec![0; size as usize],
+        }
     }
 
     pub fn set_memory(&mut self, data: &Vec<u8>, offset: u16) -> Result<(), SetMemoryError> {
         let offset = offset as usize;
-        if offset + data.len() > self.memory.len(){
-            return Err(SetMemoryError{})
+        if offset + data.len() > self.memory.len() {
+            return Err(SetMemoryError {});
         }
         for i in 0..data.len() {
             self.memory[i + offset] = data[i]
@@ -28,17 +30,16 @@ impl Device for Ram {
     fn set_byte(&mut self, byte: u8, offset: u16) {
         self.memory[offset as usize] = byte;
     }
-    
+
     fn get_byte(&self, offset: u16) -> u8 {
         self.memory[offset as usize]
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use assert::*;
     use super::*;
+    use assert::*;
 
     #[test]
     fn set_memory_to_begin() {

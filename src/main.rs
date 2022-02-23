@@ -1,20 +1,20 @@
-mod cpu;
-mod ram;
-mod ops_lookup;
 pub mod bus;
+mod cpu;
+mod ops_lookup;
+mod ram;
 
 #[macro_use]
 extern crate lazy_static;
 
 use std::rc::{Rc, Weak};
 
-use cpu::Cpu;
-use bus::{Bus, Device};
-use ram::Ram;
 use asm6502::assemble;
+use bus::{Bus, Device};
+use cpu::Cpu;
+use ram::Ram;
 
 fn main() {
-    let mut cpu : Cpu = Default::default();
+    let mut cpu: Cpu = Default::default();
     let mut bus = Bus::new();
     let mut ram = Rc::new(Ram::new(0xffff as u16));
 
