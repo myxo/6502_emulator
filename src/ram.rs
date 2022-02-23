@@ -4,6 +4,7 @@ pub struct Ram {
     memory: Vec<u8>
 }
 
+#[derive(Debug)]
 pub struct SetMemoryError{}
 
 impl Ram {

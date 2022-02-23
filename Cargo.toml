@@ -7,3 +7,4 @@ edition = "2021"
 [dependencies]
 asm6502 = "0.1.2"
 assert = "0.0.4"
+lazy_static = "1.4.0"

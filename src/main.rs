@@ -1,6 +1,10 @@
 mod cpu;
 mod ram;
+mod ops_lookup;
 pub mod bus;
+
+#[macro_use]
+extern crate lazy_static;
 
 use std::rc::{Rc, Weak};
 
@@ -10,7 +14,7 @@ use ram::Ram;
 use asm6502::assemble;
 
 fn main() {
-    let mut cpu = Cpu::new();
+    let mut cpu : Cpu = Default::default();
     let mut bus = Bus::new();
     let mut ram = Rc::new(Ram::new(0xffff as u16));
 
@@ -24,6 +28,6 @@ fn main() {
     bus.connect_device(Rc::downgrade(&ram) as Weak<dyn Device>, 0, 0xffff);
 
     for _ in 1..10 {
-        cpu.tick(&bus);
+        cpu.tick(&mut bus);
     }
 }
