@@ -8,15 +8,16 @@ pub enum Code {
 
 #[derive(Clone, Copy)]
 pub enum AddressMode {
-    Absolute,
-    AbsoluteX,
-    AbsoluteY,
     ImmediateAddress,
-    IndirectX,
-    IndirectY,
     ZeroPage,
     ZeroPageX,
     ZeroPageY,
+    Absolute,
+    AbsoluteX,
+    AbsoluteY,
+    Indirect,
+    IndirectX,
+    IndirectY,
 }
 
 #[derive(Clone, Copy)]

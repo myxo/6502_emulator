@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::rc::Weak;
 
 pub trait Device {
     fn get_byte(&self, offset: u16) -> u8;
@@ -46,5 +46,9 @@ impl Bus {
             }
         }
         todo!()
+    }
+
+    pub fn get_two_bytes(&self, offset: u16) -> u16 {
+        ((self.get_byte(offset + 1) as u16) << 8) + self.get_byte(offset) as u16
     }
 }

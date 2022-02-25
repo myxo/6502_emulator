@@ -36,29 +36,23 @@ impl Cpu {
 
         let address = match op.mode {
             AddressMode::ImmediateAddress => self.pc + 1,
-            AddressMode::ZeroPage => {
-                todo!();
-            }
-            AddressMode::ZeroPageX => {
-                todo!();
-            }
-            AddressMode::ZeroPageY => {
-                todo!();
-            }
-            AddressMode::Absolute => {
-                ((bus.get_byte(self.pc + 2) as u16) << 8) + bus.get_byte(self.pc + 1) as u16
-            }
-            AddressMode::AbsoluteX => {
-                todo!();
-            }
-            AddressMode::AbsoluteY => {
-                todo!();
+            AddressMode::ZeroPage => bus.get_byte(self.pc + 1) as u16,
+            AddressMode::ZeroPageX => bus.get_byte(self.pc + 1) as u16 + self.reg.x as u16,
+            AddressMode::ZeroPageY => bus.get_byte(self.pc + 1) as u16 + self.reg.y as u16,
+            AddressMode::Absolute => bus.get_two_bytes(self.pc + 1),
+            AddressMode::AbsoluteX => bus.get_two_bytes(self.pc + 1) + self.reg.x as u16,
+            AddressMode::AbsoluteY => bus.get_two_bytes(self.pc + 1) + self.reg.y as u16,
+            AddressMode::Indirect => {
+                let indirect = bus.get_two_bytes(self.pc + 1);
+                bus.get_two_bytes(indirect)
             }
             AddressMode::IndirectX => {
-                todo!();
+                let arg = bus.get_byte(self.pc + 1) as u16;
+                bus.get_two_bytes(arg + self.reg.x as u16)
             }
             AddressMode::IndirectY => {
-                todo!();
+                let arg = bus.get_byte(self.pc + 1) as u16;
+                bus.get_two_bytes(arg) + self.reg.y as u16
             }
         };
         println!("look at address: {:#04X} ", address);
@@ -118,4 +112,69 @@ mod tests {
         cpu.tick(&mut bus);
         assert_eq!(cpu.reg.a, 42);
     }
+
+    #[test]
+    fn lda_zero() {
+        let (mut cpu, mut bus, _ram) = fixture("LDA $c1");
+        bus.set_byte(42, 0x00c1);
+
+        cpu.tick(&mut bus);
+        assert_eq!(cpu.reg.a, 42);
+    }
+
+    #[test]
+    fn lda_zero_x() {
+        let (mut cpu, mut bus, _ram) = fixture("LDA $c0,X");
+        cpu.reg.x = 1;
+        bus.set_byte(42, 0x00c1);
+
+        cpu.tick(&mut bus);
+        assert_eq!(cpu.reg.a, 42);
+    }
+
+    #[test]
+    fn lda_abs_x() {
+        let (mut cpu, mut bus, _ram) = fixture("LDA $4000,X");
+        cpu.reg.x = 1;
+        bus.set_byte(42, 0x4001);
+
+        cpu.tick(&mut bus);
+        assert_eq!(cpu.reg.a, 42);
+    }
+
+    #[test]
+    fn lda_abs_y() {
+        let (mut cpu, mut bus, _ram) = fixture("LDA $4000,Y");
+        cpu.reg.y = 1;
+        bus.set_byte(42, 0x4001);
+
+        cpu.tick(&mut bus);
+        assert_eq!(cpu.reg.a, 42);
+    }
+
+    #[test]
+    fn lda_indirect_x() {
+        let (mut cpu, mut bus, _ram) = fixture("LDA ($f0,X)");
+        cpu.reg.x = 1;
+        bus.set_byte(5, 0x00f1);
+        bus.set_byte(7, 0x00f2);
+        bus.set_byte(0x0a, 0x0705);
+
+        cpu.tick(&mut bus);
+        assert_eq!(cpu.reg.a, 0x0a);
+    }
+
+    #[test]
+    fn lda_indirect_y() {
+        let (mut cpu, mut bus, _ram) = fixture("LDA ($f1),Y");
+        cpu.reg.y = 1;
+        bus.set_byte(3, 0x00f1);
+        bus.set_byte(7, 0x00f2);
+        bus.set_byte(0x0a, 0x0704);
+
+        cpu.tick(&mut bus);
+        assert_eq!(cpu.reg.a, 0x0a);
+    }
+
+    // TODO: cross page tests. lda_abs_x, lda_abs_y
 }
