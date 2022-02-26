@@ -8,9 +8,21 @@ pub struct Registers {
     y: u8,
 }
 
+#[derive(Default, Clone, Copy, PartialEq, Debug)]
+pub struct Flags {
+    carry: bool,
+    zero: bool,
+    interrupt_disabled: bool,
+    decimal_mode: bool,
+    break_command: bool,
+    overdlow: bool,
+    negative: bool,
+}
+
 #[derive(Default, Clone, Copy)]
 pub struct Cpu {
     reg: Registers,
+    flags: Flags,
     pc: u16,
     sp: u16,
 }
@@ -54,16 +66,34 @@ impl Cpu {
                 let arg = bus.get_byte(self.pc + 1) as u16;
                 bus.get_two_bytes(arg) + self.reg.y as u16
             }
+            AddressMode::Implied => {
+                0 // Do not address memory in this mode
+                  // TODO: make type safe check?
+            }
         };
         println!("look at address: {:#04X} ", address);
 
-        // TODO: get rid of double lookup?
         match op.code {
             Code::LDA => {
                 self.reg.a = bus.get_byte(address);
+                self.update_n_z_flags(self.reg.a);
             }
+            Code::LDX => {
+                self.reg.x = bus.get_byte(address);
+                self.update_n_z_flags(self.reg.x);
+            }
+            Code::LDY => {
+                self.reg.y = bus.get_byte(address);
+                self.update_n_z_flags(self.reg.y);
+            }
+            Code::NOP => {}
         }
         self.pc += op.instruction_bytes as u16;
+    }
+
+    fn update_n_z_flags(&mut self, new_val: u8) {
+        self.flags.zero = new_val == 0;
+        self.flags.negative = new_val & 0b1000000 != 0;
     }
 }
 
@@ -100,8 +130,10 @@ mod tests {
     fn lda_im() {
         let (mut cpu, mut bus, _ram) = fixture("LDA #42");
 
+        let flag_old = cpu.flags;
         cpu.tick(&mut bus);
         assert_eq!(cpu.reg.a, 42);
+        assert_eq!(cpu.flags, flag_old);
     }
 
     #[test]
@@ -174,6 +206,22 @@ mod tests {
 
         cpu.tick(&mut bus);
         assert_eq!(cpu.reg.a, 0x0a);
+    }
+
+    #[test]
+    fn lda_n_flag(){
+        let (mut cpu, mut bus, _ram) = fixture("LDA #$ff");
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.negative);
+    }
+
+    #[test]
+    fn lda_z_flag(){
+        let (mut cpu, mut bus, _ram) = fixture("LDA #$0");
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.zero);
     }
 
     // TODO: cross page tests. lda_abs_x, lda_abs_y
