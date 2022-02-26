@@ -45,9 +45,7 @@ impl Cpu {
 
         let op = OPCODE_TABLE[op_code as usize];
         if op.is_none() {
-            print!("Unknown opcode: {:#04x}\n", op_code);
-            self.pc += 1;
-            return;
+            panic!("Unknown opcode: {:#04x}\n", op_code);
         }
         let op = op.unwrap();
 
@@ -103,6 +101,31 @@ impl Cpu {
             Code::LDY => {
                 self.reg.y = bus.get_byte(address);
                 self.update_n_z_flags(self.reg.y);
+            }
+            Code::STA => {
+                bus.set_byte(self.reg.a, address);
+            }
+            Code::STX => {
+                bus.set_byte(self.reg.x, address);
+            }
+            Code::STY => {
+                bus.set_byte(self.reg.y, address);
+            }
+            Code::TAX => {
+                self.reg.x = self.reg.a;
+                self.update_n_z_flags(self.reg.x);
+            }
+            Code::TXA => {
+                self.reg.a = self.reg.x;
+                self.update_n_z_flags(self.reg.a);
+            }
+            Code::TAY => {
+                self.reg.y = self.reg.a;
+                self.update_n_z_flags(self.reg.y);
+            }
+            Code::TYA => {
+                self.reg.a = self.reg.y;
+                self.update_n_z_flags(self.reg.a);
             }
             Code::NOP => {}
         }
@@ -253,6 +276,69 @@ mod tests {
         cpu.tick(&mut bus);
 
         assert!(cpu.flags.zero);
+    }
+
+    #[test]
+    fn sta_abs() {
+        let (mut cpu, mut bus, _ram) = fixture("STA $22ff");
+        cpu.reg.a = 0x0a;
+        cpu.tick(&mut bus);
+
+        assert_eq!(bus.get_byte(0x22ff), 0x0a);
+    }
+
+    #[test]
+    fn stx_abs() {
+        let (mut cpu, mut bus, _ram) = fixture("STX $22ff");
+        cpu.reg.x = 0x0a;
+        cpu.tick(&mut bus);
+
+        assert_eq!(bus.get_byte(0x22ff), 0x0a);
+    }
+
+    #[test]
+    fn sty_abs() {
+        let (mut cpu, mut bus, _ram) = fixture("STY $22ff");
+        cpu.reg.y = 0x0a;
+        cpu.tick(&mut bus);
+
+        assert_eq!(bus.get_byte(0x22ff), 0x0a);
+    }
+
+    #[test]
+    fn tax() {
+        let (mut cpu, mut bus, _ram) = fixture("TAX\n");
+        cpu.reg.a = 0x0a;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.x, 0x0a);
+    }
+
+    #[test]
+    fn txa() {
+        let (mut cpu, mut bus, _ram) = fixture("TXA\n");
+        cpu.reg.x = 0x0a;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x0a);
+    }
+
+    #[test]
+    fn tay() {
+        let (mut cpu, mut bus, _ram) = fixture("TAY\n");
+        cpu.reg.a = 0x0a;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.y, 0x0a);
+    }
+
+    #[test]
+    fn tya() {
+        let (mut cpu, mut bus, _ram) = fixture("TYA\n");
+        cpu.reg.y = 0x0a;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x0a);
     }
 
     // TODO: cross page tests. lda_abs_x, lda_abs_y

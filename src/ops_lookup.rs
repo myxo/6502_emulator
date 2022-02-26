@@ -6,6 +6,13 @@ pub enum Code {
     LDA,
     LDX,
     LDY,
+    STA,
+    STX,
+    STY,
+    TAX,
+    TXA,
+    TAY,
+    TYA,
     NOP,
 }
 
@@ -76,6 +83,27 @@ lazy_static! {
         l[0xb4] = OpDescription::new(Code::LDY, AddressMode::ZeroPageX, Byte(2), Cycle(4), "LDY", PageBound::No);
         l[0xac] = OpDescription::new(Code::LDY, AddressMode::Absolute, Byte(3), Cycle(4), "LDY", PageBound::No);
         l[0xbc] = OpDescription::new(Code::LDY, AddressMode::AbsoluteX, Byte(3), Cycle(4), "LDY", PageBound::Yes);
+
+        l[0x85] = OpDescription::new(Code::STA, AddressMode::ZeroPage, Byte(2), Cycle(3), "STA", PageBound::No);
+        l[0x95] = OpDescription::new(Code::STA, AddressMode::ZeroPageX, Byte(2), Cycle(4), "STA", PageBound::No);
+        l[0x8d] = OpDescription::new(Code::STA, AddressMode::Absolute, Byte(3), Cycle(4), "STA", PageBound::No);
+        l[0x9d] = OpDescription::new(Code::STA, AddressMode::AbsoluteX, Byte(3), Cycle(5), "STA", PageBound::No);
+        l[0x99] = OpDescription::new(Code::STA, AddressMode::AbsoluteY, Byte(3), Cycle(5), "STA", PageBound::No);
+        l[0x81] = OpDescription::new(Code::STA, AddressMode::IndirectX, Byte(2), Cycle(6), "STA", PageBound::No);
+        l[0x91] = OpDescription::new(Code::STA, AddressMode::IndirectY, Byte(2), Cycle(6), "STA", PageBound::No);
+
+        l[0x86] = OpDescription::new(Code::STX, AddressMode::ZeroPage, Byte(2), Cycle(3), "STX", PageBound::No);
+        l[0x96] = OpDescription::new(Code::STX, AddressMode::ZeroPageY, Byte(2), Cycle(4), "STX", PageBound::No);
+        l[0x8e] = OpDescription::new(Code::STX, AddressMode::Absolute, Byte(3), Cycle(4), "STX", PageBound::No);
+
+        l[0x84] = OpDescription::new(Code::STY, AddressMode::ZeroPage, Byte(2), Cycle(3), "STY", PageBound::No);
+        l[0x94] = OpDescription::new(Code::STY, AddressMode::ZeroPageX, Byte(2), Cycle(4), "STY", PageBound::No);
+        l[0x8c] = OpDescription::new(Code::STY, AddressMode::Absolute, Byte(3), Cycle(4), "STY", PageBound::No);
+
+        l[0xaa] = OpDescription::new(Code::TAX, AddressMode::Implied, Byte(1), Cycle(2), "TAX", PageBound::No);
+        l[0x8a] = OpDescription::new(Code::TXA, AddressMode::Implied, Byte(1), Cycle(2), "TXA", PageBound::No);
+        l[0xa8] = OpDescription::new(Code::TAY, AddressMode::Implied, Byte(1), Cycle(2), "TAY", PageBound::No);
+        l[0x98] = OpDescription::new(Code::TYA, AddressMode::Implied, Byte(1), Cycle(2), "TYA", PageBound::No);
 
         l[0xea] = OpDescription::new(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2), "NOP", PageBound::No);
 

@@ -19,13 +19,14 @@ fn main() {
     let mut bus = Bus::new();
     let ram = Rc::new(RefCell::new(Ram::new(0xffff as u16)));
 
+    // let asm = "LDA #1\nADC #1\nCMP #2".as_bytes();
     let asm = "LDA #1\nADC #1\nCMP #2".as_bytes();
     let mut buf = Vec::<u8>::new();
     if let Err(msg) = assemble(asm, &mut buf) {
         panic!("Failed to assemble: {}", msg);
     }
 
-    (*ram).borrow_mut().set_memory(&buf, 0);
+    (*ram).borrow_mut().set_memory(&buf, 0).unwrap();
     bus.connect_device(Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>, 0, 0xffff);
 
     for _ in 1..10 {
