@@ -108,7 +108,7 @@ impl Cpu {
         }
         self.pc += op.instruction_bytes as u16;
         self.cycle_left = op.cycles;
-        if cross_page {
+        if cross_page && op.page_boundary_cycle {
             self.cycle_left += 1;
         }
     }
