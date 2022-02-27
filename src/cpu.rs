@@ -157,6 +157,47 @@ impl Cpu {
                 self.reg.y = new_val;
                 self.update_n_z_flags(new_val);
             }
+            Code::AND => {
+                println!("A: {:#04X}, op: {:#04X}", self.reg.a, bus.get_byte(address));
+                self.reg.a = self.reg.a & bus.get_byte(address);
+                self.update_n_z_flags(self.reg.a);
+            }
+            Code::EOR => {
+                self.reg.a = self.reg.a ^ bus.get_byte(address);
+                self.update_n_z_flags(self.reg.a);
+            }
+            Code::ORA => {
+                self.reg.a = self.reg.a | bus.get_byte(address);
+                self.update_n_z_flags(self.reg.a);
+            }
+            Code::BIT => {
+                let mem = bus.get_byte(address);
+                // TODO: is this really accurate?
+                self.flags.zero = self.reg.a & mem == 0;
+                self.flags.negative = mem & 0b10000000 == 1;
+                self.flags.overdlow = mem & 0b01000000 == 1;
+            }
+            Code::CLC => {
+                self.flags.carry = false;
+            }
+            Code::CLD => {
+                self.flags.decimal_mode = false;
+            }
+            Code::CLI => {
+                self.flags.interrupt_disabled = false;
+            }
+            Code::CLV => {
+                self.flags.overdlow = false;
+            }
+            Code::SEC => {
+                self.flags.carry = true;
+            }
+            Code::SED => {
+                self.flags.decimal_mode = true;
+            }
+            Code::SEI => {
+                self.flags.interrupt_disabled = true;
+            }
             Code::NOP => {}
         }
         self.pc += op.instruction_bytes as u16;
@@ -423,5 +464,105 @@ mod tests {
         cpu.tick(&mut bus);
 
         assert_eq!(cpu.reg.y, 9);
+    }
+
+    #[test]
+    fn and() {
+        let (mut cpu, mut bus, _ram) = fixture("AND #06");
+        cpu.reg.a = 0x05;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x04);
+    }
+
+    #[test]
+    fn eor() {
+        let (mut cpu, mut bus, _ram) = fixture("EOR #06");
+        cpu.reg.a = 0x05;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x03);
+    }
+
+    #[test]
+    fn ora() {
+        let (mut cpu, mut bus, _ram) = fixture("ORA #06");
+        cpu.reg.a = 0x05;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x07);
+    }
+
+    #[test]
+    fn bit() {
+        let (mut cpu, mut bus, _ram) = fixture("BIT $000a");
+        bus.set_byte(5, 0x000a);
+        cpu.reg.a = 0x05;
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.zero);
+    }
+
+    #[test]
+    fn clc() {
+        let (mut cpu, mut bus, _ram) = fixture("CLC\n");
+        cpu.flags.carry = true;
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.carry);
+    }
+
+    #[test]
+    fn cld() {
+        let (mut cpu, mut bus, _ram) = fixture("CLD\n");
+        cpu.flags.decimal_mode = true;
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.decimal_mode);
+    }
+
+    #[test]
+    fn cli() {
+        let (mut cpu, mut bus, _ram) = fixture("CLI\n");
+        cpu.flags.interrupt_disabled = true;
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.interrupt_disabled);
+    }
+
+    #[test]
+    fn clv() {
+        let (mut cpu, mut bus, _ram) = fixture("CLV\n");
+        cpu.flags.overdlow = true;
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.overdlow);
+    }
+
+    #[test]
+    fn sec() {
+        let (mut cpu, mut bus, _ram) = fixture("SEC\n");
+        cpu.flags.carry = false;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry);
+    }
+
+    #[test]
+    fn sed() {
+        let (mut cpu, mut bus, _ram) = fixture("SED\n");
+        cpu.flags.decimal_mode = false;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.decimal_mode);
+    }
+
+    #[test]
+    fn sei() {
+        let (mut cpu, mut bus, _ram) = fixture("SEI\n");
+        cpu.flags.interrupt_disabled = false;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.interrupt_disabled);
     }
 }

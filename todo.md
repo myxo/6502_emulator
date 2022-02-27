@@ -10,35 +10,28 @@
 
 # Upcoming
 [ ] Debugger
+[ ] CPU debug mode (like gdb)?
 
 # Current
 
-What left:
+What's left:
 ADC
-AND
 ASL
 BCC
 BCS
 BEQ
-BIT
 BMI
 BNE
 BPL
 BRK
 BVC
 BVS
-CLC
-CLD
-CLI
-CLV
 CMP
 CPX
 CPY
-EOR
 JMP
 JSR
 LSR
-ORA
 PHA
 PHP
 PLA
@@ -48,9 +41,6 @@ ROR
 RTI
 RTS
 SBC
-SEC
-SED
-SEI
 TSX
 TXS
 

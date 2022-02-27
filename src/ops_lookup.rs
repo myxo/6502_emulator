@@ -19,6 +19,17 @@ pub enum Code {
     DEC,
     DEX,
     DEY,
+    AND,
+    EOR,
+    ORA,
+    BIT,
+    CLC,
+    CLD,
+    CLI,
+    CLV,
+    SEC,
+    SED,
+    SEI,
     NOP,
 }
 
@@ -140,6 +151,44 @@ lazy_static! {
         l[0xc8] = declare_op!(Code::INY, AddressMode::Implied, Byte(1), Cycle(2));
         l[0xca] = declare_op!(Code::DEX, AddressMode::Implied, Byte(1), Cycle(2));
         l[0x88] = declare_op!(Code::DEY, AddressMode::Implied, Byte(1), Cycle(2));
+
+        l[0x29] = declare_op!(Code::AND, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0x25] = declare_op!(Code::AND, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0x35] = declare_op!(Code::AND, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0x2d] = declare_op!(Code::AND, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0x3d] = declare_op!(Code::AND, AddressMode::AbsoluteX, Byte(3), Cycle(4), PageBound::Yes);
+        l[0x39] = declare_op!(Code::AND, AddressMode::AbsoluteY, Byte(3), Cycle(4), PageBound::Yes);
+        l[0x21] = declare_op!(Code::AND, AddressMode::IndirectX, Byte(2), Cycle(6));
+        l[0x31] = declare_op!(Code::AND, AddressMode::IndirectY, Byte(2), Cycle(5), PageBound::Yes);
+
+        l[0x49] = declare_op!(Code::EOR, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0x45] = declare_op!(Code::EOR, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0x55] = declare_op!(Code::EOR, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0x4d] = declare_op!(Code::EOR, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0x5d] = declare_op!(Code::EOR, AddressMode::AbsoluteX, Byte(3), Cycle(4), PageBound::Yes);
+        l[0x59] = declare_op!(Code::EOR, AddressMode::AbsoluteY, Byte(3), Cycle(4), PageBound::Yes);
+        l[0x41] = declare_op!(Code::EOR, AddressMode::IndirectX, Byte(2), Cycle(6));
+        l[0x51] = declare_op!(Code::EOR, AddressMode::IndirectY, Byte(2), Cycle(5), PageBound::Yes);
+
+        l[0x09] = declare_op!(Code::ORA, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0x05] = declare_op!(Code::ORA, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0x15] = declare_op!(Code::ORA, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0x0d] = declare_op!(Code::ORA, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0x1d] = declare_op!(Code::ORA, AddressMode::AbsoluteX, Byte(3), Cycle(4), PageBound::Yes);
+        l[0x19] = declare_op!(Code::ORA, AddressMode::AbsoluteY, Byte(3), Cycle(4), PageBound::Yes);
+        l[0x01] = declare_op!(Code::ORA, AddressMode::IndirectX, Byte(2), Cycle(6));
+        l[0x11] = declare_op!(Code::ORA, AddressMode::IndirectY, Byte(2), Cycle(5), PageBound::Yes);
+        
+        l[0x24] = declare_op!(Code::BIT, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0x2c] = declare_op!(Code::BIT, AddressMode::Absolute, Byte(3), Cycle(4));
+
+        l[0x18] = declare_op!(Code::CLC, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0xd8] = declare_op!(Code::CLD, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0x58] = declare_op!(Code::CLI, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0xb8] = declare_op!(Code::CLV, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0x38] = declare_op!(Code::SEC, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0xf8] = declare_op!(Code::SED, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0x78] = declare_op!(Code::SEI, AddressMode::Implied, Byte(1), Cycle(2));
 
         l[0xea] = declare_op!(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2));
 
