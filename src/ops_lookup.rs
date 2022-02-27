@@ -53,80 +53,96 @@ struct Cycle(u8);
 
 #[derive(PartialEq)]
 enum PageBound {
-    No,
+    _No, // don't actually need this after macro?
     Yes,
 }
 
-impl OpDescription {
-    #[rustfmt::skip]
-    fn new(code: Code, mode: AddressMode, bytes: Byte, cycles: Cycle, name: &'static str, check_bound: PageBound) -> Option<OpDescription> {
-        let check_page_bound : bool = check_bound == PageBound::Yes;
-        Some(OpDescription { code, mode, instruction_bytes: bytes.0, cycles: cycles.0, name, page_boundary_cycle: check_page_bound})
-    }
+macro_rules! declare_op {
+    ($code: expr, $mode:expr, $bytes:expr, $cycles:expr, $check_bound:expr) => {{
+        let page_boundary_cycle: bool = $check_bound == PageBound::Yes;
+        Some(OpDescription {
+            code: $code,
+            mode: $mode,
+            instruction_bytes: $bytes.0,
+            cycles: $cycles.0,
+            name: stringify!(code),
+            page_boundary_cycle,
+        })
+    }};
+    ($code: expr, $mode:expr, $bytes:expr, $cycles:expr) => {{
+        Some(OpDescription {
+            code: $code,
+            mode: $mode,
+            instruction_bytes: $bytes.0,
+            cycles: $cycles.0,
+            name: stringify!(code),
+            page_boundary_cycle: false,
+        })
+    }};
 }
 
 #[rustfmt::skip]
 lazy_static! {
     pub static ref OPCODE_TABLE: [Option<OpDescription>; 256] = {
         let mut l = [None; 256];
-        l[0xa9] = OpDescription::new(Code::LDA, AddressMode::Immediate, Byte(2), Cycle(2), "LDA", PageBound::No);
-        l[0xa5] = OpDescription::new(Code::LDA, AddressMode::ZeroPage, Byte(2), Cycle(3), "LDA", PageBound::No);
-        l[0xb5] = OpDescription::new(Code::LDA, AddressMode::ZeroPageX, Byte(2), Cycle(4), "LDA", PageBound::No);
-        l[0xad] = OpDescription::new(Code::LDA, AddressMode::Absolute, Byte(3), Cycle(4), "LDA", PageBound::No);
-        l[0xbd] = OpDescription::new(Code::LDA, AddressMode::AbsoluteX, Byte(3), Cycle(4), "LDA", PageBound::Yes);
-        l[0xb9] = OpDescription::new(Code::LDA, AddressMode::AbsoluteY, Byte(3), Cycle(4), "LDA", PageBound::Yes);
-        l[0xa1] = OpDescription::new(Code::LDA, AddressMode::IndirectX, Byte(2), Cycle(6), "LDA", PageBound::No);
-        l[0xb1] = OpDescription::new(Code::LDA, AddressMode::IndirectY, Byte(2), Cycle(5), "LDA", PageBound::Yes);
+        l[0xa9] = declare_op!(Code::LDA, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0xa5] = declare_op!(Code::LDA, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0xb5] = declare_op!(Code::LDA, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0xad] = declare_op!(Code::LDA, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0xbd] = declare_op!(Code::LDA, AddressMode::AbsoluteX, Byte(3), Cycle(4), PageBound::Yes);
+        l[0xb9] = declare_op!(Code::LDA, AddressMode::AbsoluteY, Byte(3), Cycle(4), PageBound::Yes);
+        l[0xa1] = declare_op!(Code::LDA, AddressMode::IndirectX, Byte(2), Cycle(6));
+        l[0xb1] = declare_op!(Code::LDA, AddressMode::IndirectY, Byte(2), Cycle(5), PageBound::Yes);
 
-        l[0xa2] = OpDescription::new(Code::LDX, AddressMode::Immediate, Byte(2), Cycle(2), "LDX", PageBound::No);
-        l[0xa6] = OpDescription::new(Code::LDX, AddressMode::ZeroPage, Byte(2), Cycle(3), "LDX", PageBound::No);
-        l[0xb6] = OpDescription::new(Code::LDX, AddressMode::ZeroPageY, Byte(2), Cycle(4), "LDX", PageBound::No);
-        l[0xae] = OpDescription::new(Code::LDX, AddressMode::Absolute, Byte(3), Cycle(4), "LDX", PageBound::No);
-        l[0xbe] = OpDescription::new(Code::LDX, AddressMode::AbsoluteY, Byte(3), Cycle(4), "LDX", PageBound::Yes);
+        l[0xa2] = declare_op!(Code::LDX, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0xa6] = declare_op!(Code::LDX, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0xb6] = declare_op!(Code::LDX, AddressMode::ZeroPageY, Byte(2), Cycle(4));
+        l[0xae] = declare_op!(Code::LDX, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0xbe] = declare_op!(Code::LDX, AddressMode::AbsoluteY, Byte(3), Cycle(4), PageBound::Yes);
 
-        l[0xa0] = OpDescription::new(Code::LDY, AddressMode::Immediate, Byte(2), Cycle(2), "LDY", PageBound::No);
-        l[0xa4] = OpDescription::new(Code::LDY, AddressMode::ZeroPage, Byte(2), Cycle(3), "LDY", PageBound::No);
-        l[0xb4] = OpDescription::new(Code::LDY, AddressMode::ZeroPageX, Byte(2), Cycle(4), "LDY", PageBound::No);
-        l[0xac] = OpDescription::new(Code::LDY, AddressMode::Absolute, Byte(3), Cycle(4), "LDY", PageBound::No);
-        l[0xbc] = OpDescription::new(Code::LDY, AddressMode::AbsoluteX, Byte(3), Cycle(4), "LDY", PageBound::Yes);
+        l[0xa0] = declare_op!(Code::LDY, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0xa4] = declare_op!(Code::LDY, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0xb4] = declare_op!(Code::LDY, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0xac] = declare_op!(Code::LDY, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0xbc] = declare_op!(Code::LDY, AddressMode::AbsoluteX, Byte(3), Cycle(4), PageBound::Yes);
 
-        l[0x85] = OpDescription::new(Code::STA, AddressMode::ZeroPage, Byte(2), Cycle(3), "STA", PageBound::No);
-        l[0x95] = OpDescription::new(Code::STA, AddressMode::ZeroPageX, Byte(2), Cycle(4), "STA", PageBound::No);
-        l[0x8d] = OpDescription::new(Code::STA, AddressMode::Absolute, Byte(3), Cycle(4), "STA", PageBound::No);
-        l[0x9d] = OpDescription::new(Code::STA, AddressMode::AbsoluteX, Byte(3), Cycle(5), "STA", PageBound::No);
-        l[0x99] = OpDescription::new(Code::STA, AddressMode::AbsoluteY, Byte(3), Cycle(5), "STA", PageBound::No);
-        l[0x81] = OpDescription::new(Code::STA, AddressMode::IndirectX, Byte(2), Cycle(6), "STA", PageBound::No);
-        l[0x91] = OpDescription::new(Code::STA, AddressMode::IndirectY, Byte(2), Cycle(6), "STA", PageBound::No);
+        l[0x85] = declare_op!(Code::STA, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0x95] = declare_op!(Code::STA, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0x8d] = declare_op!(Code::STA, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0x9d] = declare_op!(Code::STA, AddressMode::AbsoluteX, Byte(3), Cycle(5));
+        l[0x99] = declare_op!(Code::STA, AddressMode::AbsoluteY, Byte(3), Cycle(5));
+        l[0x81] = declare_op!(Code::STA, AddressMode::IndirectX, Byte(2), Cycle(6));
+        l[0x91] = declare_op!(Code::STA, AddressMode::IndirectY, Byte(2), Cycle(6));
 
-        l[0x86] = OpDescription::new(Code::STX, AddressMode::ZeroPage, Byte(2), Cycle(3), "STX", PageBound::No);
-        l[0x96] = OpDescription::new(Code::STX, AddressMode::ZeroPageY, Byte(2), Cycle(4), "STX", PageBound::No);
-        l[0x8e] = OpDescription::new(Code::STX, AddressMode::Absolute, Byte(3), Cycle(4), "STX", PageBound::No);
+        l[0x86] = declare_op!(Code::STX, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0x96] = declare_op!(Code::STX, AddressMode::ZeroPageY, Byte(2), Cycle(4));
+        l[0x8e] = declare_op!(Code::STX, AddressMode::Absolute, Byte(3), Cycle(4));
 
-        l[0x84] = OpDescription::new(Code::STY, AddressMode::ZeroPage, Byte(2), Cycle(3), "STY", PageBound::No);
-        l[0x94] = OpDescription::new(Code::STY, AddressMode::ZeroPageX, Byte(2), Cycle(4), "STY", PageBound::No);
-        l[0x8c] = OpDescription::new(Code::STY, AddressMode::Absolute, Byte(3), Cycle(4), "STY", PageBound::No);
+        l[0x84] = declare_op!(Code::STY, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0x94] = declare_op!(Code::STY, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0x8c] = declare_op!(Code::STY, AddressMode::Absolute, Byte(3), Cycle(4));
 
-        l[0xaa] = OpDescription::new(Code::TAX, AddressMode::Implied, Byte(1), Cycle(2), "TAX", PageBound::No);
-        l[0x8a] = OpDescription::new(Code::TXA, AddressMode::Implied, Byte(1), Cycle(2), "TXA", PageBound::No);
-        l[0xa8] = OpDescription::new(Code::TAY, AddressMode::Implied, Byte(1), Cycle(2), "TAY", PageBound::No);
-        l[0x98] = OpDescription::new(Code::TYA, AddressMode::Implied, Byte(1), Cycle(2), "TYA", PageBound::No);
+        l[0xaa] = declare_op!(Code::TAX, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0x8a] = declare_op!(Code::TXA, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0xa8] = declare_op!(Code::TAY, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0x98] = declare_op!(Code::TYA, AddressMode::Implied, Byte(1), Cycle(2));
 
-        l[0xe6] = OpDescription::new(Code::INC, AddressMode::ZeroPage, Byte(2), Cycle(5), "INC", PageBound::No);
-        l[0xf6] = OpDescription::new(Code::INC, AddressMode::ZeroPageX, Byte(2), Cycle(6), "INC", PageBound::No);
-        l[0xee] = OpDescription::new(Code::INC, AddressMode::Absolute, Byte(3), Cycle(6), "INC", PageBound::No);
-        l[0xfe] = OpDescription::new(Code::INC, AddressMode::AbsoluteX, Byte(3), Cycle(7), "INC", PageBound::No);
+        l[0xe6] = declare_op!(Code::INC, AddressMode::ZeroPage, Byte(2), Cycle(5));
+        l[0xf6] = declare_op!(Code::INC, AddressMode::ZeroPageX, Byte(2), Cycle(6));
+        l[0xee] = declare_op!(Code::INC, AddressMode::Absolute, Byte(3), Cycle(6));
+        l[0xfe] = declare_op!(Code::INC, AddressMode::AbsoluteX, Byte(3), Cycle(7));
 
-        l[0xc6] = OpDescription::new(Code::DEC, AddressMode::ZeroPage, Byte(2), Cycle(5), "DEC", PageBound::No);
-        l[0xd6] = OpDescription::new(Code::DEC, AddressMode::ZeroPageX, Byte(2), Cycle(6), "DEC", PageBound::No);
-        l[0xce] = OpDescription::new(Code::DEC, AddressMode::Absolute, Byte(3), Cycle(6), "DEC", PageBound::No);
-        l[0xde] = OpDescription::new(Code::DEC, AddressMode::AbsoluteX, Byte(3), Cycle(7), "DEC", PageBound::No);
+        l[0xc6] = declare_op!(Code::DEC, AddressMode::ZeroPage, Byte(2), Cycle(5));
+        l[0xd6] = declare_op!(Code::DEC, AddressMode::ZeroPageX, Byte(2), Cycle(6));
+        l[0xce] = declare_op!(Code::DEC, AddressMode::Absolute, Byte(3), Cycle(6));
+        l[0xde] = declare_op!(Code::DEC, AddressMode::AbsoluteX, Byte(3), Cycle(7));
 
-        l[0xe8] = OpDescription::new(Code::INX, AddressMode::Implied, Byte(1), Cycle(2), "INX", PageBound::No);
-        l[0xc8] = OpDescription::new(Code::INY, AddressMode::Implied, Byte(1), Cycle(2), "INY", PageBound::No);
-        l[0xca] = OpDescription::new(Code::DEX, AddressMode::Implied, Byte(1), Cycle(2), "DEX", PageBound::No);
-        l[0x88] = OpDescription::new(Code::DEY, AddressMode::Implied, Byte(1), Cycle(2), "DEY", PageBound::No);
+        l[0xe8] = declare_op!(Code::INX, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0xc8] = declare_op!(Code::INY, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0xca] = declare_op!(Code::DEX, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0x88] = declare_op!(Code::DEY, AddressMode::Implied, Byte(1), Cycle(2));
 
-        l[0xea] = OpDescription::new(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2), "NOP", PageBound::No);
+        l[0xea] = declare_op!(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2));
 
         l
     };
