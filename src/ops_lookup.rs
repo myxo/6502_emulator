@@ -24,7 +24,7 @@ pub enum Code {
 
 #[derive(Clone, Copy)]
 pub enum AddressMode {
-    ImmediateAddress,
+    Immediate,
     ZeroPage,
     ZeroPageX,
     ZeroPageY,
@@ -69,7 +69,7 @@ impl OpDescription {
 lazy_static! {
     pub static ref OPCODE_TABLE: [Option<OpDescription>; 256] = {
         let mut l = [None; 256];
-        l[0xa9] = OpDescription::new(Code::LDA, AddressMode::ImmediateAddress, Byte(2), Cycle(2), "LDA", PageBound::No);
+        l[0xa9] = OpDescription::new(Code::LDA, AddressMode::Immediate, Byte(2), Cycle(2), "LDA", PageBound::No);
         l[0xa5] = OpDescription::new(Code::LDA, AddressMode::ZeroPage, Byte(2), Cycle(3), "LDA", PageBound::No);
         l[0xb5] = OpDescription::new(Code::LDA, AddressMode::ZeroPageX, Byte(2), Cycle(4), "LDA", PageBound::No);
         l[0xad] = OpDescription::new(Code::LDA, AddressMode::Absolute, Byte(3), Cycle(4), "LDA", PageBound::No);
@@ -78,13 +78,13 @@ lazy_static! {
         l[0xa1] = OpDescription::new(Code::LDA, AddressMode::IndirectX, Byte(2), Cycle(6), "LDA", PageBound::No);
         l[0xb1] = OpDescription::new(Code::LDA, AddressMode::IndirectY, Byte(2), Cycle(5), "LDA", PageBound::Yes);
 
-        l[0xa2] = OpDescription::new(Code::LDX, AddressMode::ImmediateAddress, Byte(2), Cycle(2), "LDX", PageBound::No);
+        l[0xa2] = OpDescription::new(Code::LDX, AddressMode::Immediate, Byte(2), Cycle(2), "LDX", PageBound::No);
         l[0xa6] = OpDescription::new(Code::LDX, AddressMode::ZeroPage, Byte(2), Cycle(3), "LDX", PageBound::No);
         l[0xb6] = OpDescription::new(Code::LDX, AddressMode::ZeroPageY, Byte(2), Cycle(4), "LDX", PageBound::No);
         l[0xae] = OpDescription::new(Code::LDX, AddressMode::Absolute, Byte(3), Cycle(4), "LDX", PageBound::No);
         l[0xbe] = OpDescription::new(Code::LDX, AddressMode::AbsoluteY, Byte(3), Cycle(4), "LDX", PageBound::Yes);
 
-        l[0xa0] = OpDescription::new(Code::LDY, AddressMode::ImmediateAddress, Byte(2), Cycle(2), "LDY", PageBound::No);
+        l[0xa0] = OpDescription::new(Code::LDY, AddressMode::Immediate, Byte(2), Cycle(2), "LDY", PageBound::No);
         l[0xa4] = OpDescription::new(Code::LDY, AddressMode::ZeroPage, Byte(2), Cycle(3), "LDY", PageBound::No);
         l[0xb4] = OpDescription::new(Code::LDY, AddressMode::ZeroPageX, Byte(2), Cycle(4), "LDY", PageBound::No);
         l[0xac] = OpDescription::new(Code::LDY, AddressMode::Absolute, Byte(3), Cycle(4), "LDY", PageBound::No);

@@ -50,7 +50,7 @@ impl Cpu {
         let op = op.unwrap();
 
         let (address, cross_page): (u16, bool) = match op.mode {
-            AddressMode::ImmediateAddress => (self.pc + 1, false),
+            AddressMode::Immediate => (self.pc + 1, false),
             AddressMode::ZeroPage => (bus.get_byte(self.pc + 1) as u16, false),
             AddressMode::ZeroPageX => (bus.get_byte(self.pc + 1) as u16 + self.reg.x as u16, false),
             AddressMode::ZeroPageY => (bus.get_byte(self.pc + 1) as u16 + self.reg.y as u16, false),
