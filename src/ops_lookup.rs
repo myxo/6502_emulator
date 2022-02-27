@@ -59,14 +59,13 @@ enum PageBound {
 
 macro_rules! declare_op {
     ($code: expr, $mode:expr, $bytes:expr, $cycles:expr, $check_bound:expr) => {{
-        let page_boundary_cycle: bool = $check_bound == PageBound::Yes;
         Some(OpDescription {
             code: $code,
             mode: $mode,
             instruction_bytes: $bytes.0,
             cycles: $cycles.0,
             name: stringify!(code),
-            page_boundary_cycle,
+            page_boundary_cycle: $check_bound == PageBound::Yes,
         })
     }};
     ($code: expr, $mode:expr, $bytes:expr, $cycles:expr) => {{
