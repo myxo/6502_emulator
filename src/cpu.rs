@@ -127,6 +127,36 @@ impl Cpu {
                 self.reg.a = self.reg.y;
                 self.update_n_z_flags(self.reg.a);
             }
+            Code::INC => {
+                let new_val = bus.get_byte(address) + 1;
+                bus.set_byte(new_val, address);
+                self.update_n_z_flags(new_val);
+            }
+            Code::INX => {
+                let new_val = self.reg.x + 1;
+                self.reg.x = new_val;
+                self.update_n_z_flags(new_val);
+            }
+            Code::INY => {
+                let new_val = self.reg.y + 1;
+                self.reg.y = new_val;
+                self.update_n_z_flags(new_val);
+            }
+            Code::DEC => {
+                let new_val = bus.get_byte(address) - 1;
+                bus.set_byte(new_val, address);
+                self.update_n_z_flags(new_val);
+            }
+            Code::DEX => {
+                let new_val = self.reg.x - 1;
+                self.reg.x = new_val;
+                self.update_n_z_flags(new_val);
+            }
+            Code::DEY => {
+                let new_val = self.reg.y - 1;
+                self.reg.y = new_val;
+                self.update_n_z_flags(new_val);
+            }
             Code::NOP => {}
         }
         self.pc += op.instruction_bytes as u16;
@@ -341,5 +371,57 @@ mod tests {
         assert_eq!(cpu.reg.a, 0x0a);
     }
 
-    // TODO: cross page tests. lda_abs_x, lda_abs_y
+    #[test]
+    fn inc() {
+        let (mut cpu, mut bus, _ram) = fixture("INC $0aff");
+        bus.set_byte(10, 0x0aff);
+        cpu.tick(&mut bus);
+
+        assert_eq!(bus.get_byte(0x0aff), 11);
+    }
+
+    #[test]
+    fn dec() {
+        let (mut cpu, mut bus, _ram) = fixture("DEC $0aff");
+        bus.set_byte(10, 0x0aff);
+        cpu.tick(&mut bus);
+
+        assert_eq!(bus.get_byte(0x0aff), 9);
+    }
+
+    #[test]
+    fn inx() {
+        let (mut cpu, mut bus, _ram) = fixture("INX\n");
+        cpu.reg.x = 10;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.x, 11);
+    }
+
+    #[test]
+    fn iny() {
+        let (mut cpu, mut bus, _ram) = fixture("INY\n");
+        cpu.reg.y = 10;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.y, 11);
+    }
+
+    #[test]
+    fn dex() {
+        let (mut cpu, mut bus, _ram) = fixture("DEX\n");
+        cpu.reg.x = 10;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.x, 9);
+    }
+
+    #[test]
+    fn dey() {
+        let (mut cpu, mut bus, _ram) = fixture("DEY\n");
+        cpu.reg.y = 10;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.y, 9);
+    }
 }

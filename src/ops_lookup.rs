@@ -13,6 +13,12 @@ pub enum Code {
     TXA,
     TAY,
     TYA,
+    INC,
+    INX,
+    INY,
+    DEC,
+    DEX,
+    DEY,
     NOP,
 }
 
@@ -104,6 +110,21 @@ lazy_static! {
         l[0x8a] = OpDescription::new(Code::TXA, AddressMode::Implied, Byte(1), Cycle(2), "TXA", PageBound::No);
         l[0xa8] = OpDescription::new(Code::TAY, AddressMode::Implied, Byte(1), Cycle(2), "TAY", PageBound::No);
         l[0x98] = OpDescription::new(Code::TYA, AddressMode::Implied, Byte(1), Cycle(2), "TYA", PageBound::No);
+
+        l[0xe6] = OpDescription::new(Code::INC, AddressMode::ZeroPage, Byte(2), Cycle(5), "INC", PageBound::No);
+        l[0xf6] = OpDescription::new(Code::INC, AddressMode::ZeroPageX, Byte(2), Cycle(6), "INC", PageBound::No);
+        l[0xee] = OpDescription::new(Code::INC, AddressMode::Absolute, Byte(3), Cycle(6), "INC", PageBound::No);
+        l[0xfe] = OpDescription::new(Code::INC, AddressMode::AbsoluteX, Byte(3), Cycle(7), "INC", PageBound::No);
+
+        l[0xc6] = OpDescription::new(Code::DEC, AddressMode::ZeroPage, Byte(2), Cycle(5), "DEC", PageBound::No);
+        l[0xd6] = OpDescription::new(Code::DEC, AddressMode::ZeroPageX, Byte(2), Cycle(6), "DEC", PageBound::No);
+        l[0xce] = OpDescription::new(Code::DEC, AddressMode::Absolute, Byte(3), Cycle(6), "DEC", PageBound::No);
+        l[0xde] = OpDescription::new(Code::DEC, AddressMode::AbsoluteX, Byte(3), Cycle(7), "DEC", PageBound::No);
+
+        l[0xe8] = OpDescription::new(Code::INX, AddressMode::Implied, Byte(1), Cycle(2), "INX", PageBound::No);
+        l[0xc8] = OpDescription::new(Code::INY, AddressMode::Implied, Byte(1), Cycle(2), "INY", PageBound::No);
+        l[0xca] = OpDescription::new(Code::DEX, AddressMode::Implied, Byte(1), Cycle(2), "DEX", PageBound::No);
+        l[0x88] = OpDescription::new(Code::DEY, AddressMode::Implied, Byte(1), Cycle(2), "DEY", PageBound::No);
 
         l[0xea] = OpDescription::new(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2), "NOP", PageBound::No);
 
