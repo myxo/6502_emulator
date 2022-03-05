@@ -16,19 +16,15 @@
 
 What's left:
 ADC
-ASL
 CMP
 CPX
 CPY
 JMP
 JSR
-LSR
 PHA
 PHP
 PLA
 PLP
-ROL
-ROR
 RTI
 RTS
 SBC

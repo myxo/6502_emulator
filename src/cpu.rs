@@ -96,6 +96,7 @@ impl Cpu {
                 let cross_memory_page = self.pc & 0xff00 != new_pc & 0xff00;
                 (new_pc, cross_memory_page)
             }
+            AddressMode::Accumulator => (0, false),
         };
         println!("look at address: {:#04X} ", address);
 
@@ -181,7 +182,6 @@ impl Cpu {
                 self.update_n_z_flags(new_val);
             }
             Code::AND => {
-                println!("A: {:#04X}, op: {:#04X}", self.reg.a, bus.get_byte(address));
                 self.reg.a = self.reg.a & bus.get_byte(address);
                 self.update_n_z_flags(self.reg.a);
             }
@@ -244,6 +244,74 @@ impl Cpu {
             }
             Code::BVS => {
                 branch_on(self.flags.overdlow);
+            }
+            Code::ASL => {
+                let mem = match op.mode {
+                    AddressMode::Accumulator => self.reg.a,
+                    _ => bus.get_byte(address),
+                };
+
+                self.flags.carry = mem & 0x80 == 0x80;
+                let result = mem << 1;
+                self.update_n_z_flags(result);
+
+                match op.mode {
+                    AddressMode::Accumulator => self.reg.a = result,
+                    _ => bus.set_byte(result, address),
+                };
+            }
+            Code::LSR => {
+                let mem = match op.mode {
+                    AddressMode::Accumulator => self.reg.a,
+                    _ => bus.get_byte(address),
+                };
+
+                self.flags.carry = mem & 0x01 == 0x01;
+                let result = mem >> 1;
+                self.update_n_z_flags(result);
+
+                match op.mode {
+                    AddressMode::Accumulator => self.reg.a = result,
+                    _ => bus.set_byte(result, address),
+                };
+            }
+            Code::ROL => {
+                let mem = match op.mode {
+                    AddressMode::Accumulator => self.reg.a,
+                    _ => bus.get_byte(address),
+                };
+
+                let result = if self.flags.carry {
+                    (mem << 1) | 0x01
+                } else {
+                    mem << 1
+                };
+                self.flags.carry = mem & 0x80 == 0x80;
+                self.update_n_z_flags(result);
+
+                match op.mode {
+                    AddressMode::Accumulator => self.reg.a = result,
+                    _ => bus.set_byte(result, address),
+                };
+            }
+            Code::ROR => {
+                let mem = match op.mode {
+                    AddressMode::Accumulator => self.reg.a,
+                    _ => bus.get_byte(address),
+                };
+
+                let result = if self.flags.carry {
+                    (mem >> 1) | 0x80
+                } else {
+                    mem >> 1
+                };
+                self.flags.carry = mem & 0x01 == 0x01;
+                self.update_n_z_flags(result);
+
+                match op.mode {
+                    AddressMode::Accumulator => self.reg.a = result,
+                    _ => bus.set_byte(result, address),
+                };
             }
             Code::NOP => {}
         }
@@ -658,5 +726,109 @@ mod tests {
         cpu.tick(&mut bus);
 
         assert_eq!(cpu.pc, 0x1);
+    }
+
+    #[test]
+    fn asl_accumulator() {
+        let (mut cpu, mut bus, _ram) = fixture("ASL A");
+        cpu.reg.a = 0b01010101;
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.carry);
+        assert_eq!(cpu.reg.a, 0b10101010);
+    }
+
+    #[test]
+    fn asl_mem() {
+        let (mut cpu, mut bus, _ram) = fixture("ASL $44");
+        bus.set_byte(0b10101010, 0x44);
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry);
+        assert_eq!(bus.get_byte(0x44), 0b01010100);
+    }
+
+    #[test]
+    fn lsr_accumulator() {
+        let (mut cpu, mut bus, _ram) = fixture("LSR A");
+        cpu.reg.a = 0b01010101;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry);
+        assert_eq!(cpu.reg.a, 0b00101010);
+    }
+
+    #[test]
+    fn lsr_mem() {
+        let (mut cpu, mut bus, _ram) = fixture("LSR $44");
+        bus.set_byte(0b10101010, 0x44);
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.carry);
+        assert_eq!(bus.get_byte(0x44), 0b01010101);
+    }
+
+    #[test]
+    fn rol_accumulator_with_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("ROL A");
+        cpu.flags.carry = true;
+        cpu.reg.a = 0b01010101;
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.carry);
+        assert_eq!(cpu.reg.a, 0b10101011);
+    }
+
+    #[test]
+    fn rol_accumulator_witout_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("ROL A");
+        cpu.flags.carry = false;
+        cpu.reg.a = 0b01010101;
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.carry);
+        assert_eq!(cpu.reg.a, 0b10101010);
+    }
+
+    #[test]
+    fn rol_mem() {
+        let (mut cpu, mut bus, _ram) = fixture("ROL $44");
+        bus.set_byte(0b10101010, 0x44);
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry);
+        assert_eq!(bus.get_byte(0x44), 0b01010100);
+    }
+
+    #[test]
+    fn ror_accumulator_with_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("ROR A");
+        cpu.flags.carry = true;
+        cpu.reg.a = 0b01010101;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry);
+        assert_eq!(cpu.reg.a, 0b10101010);
+    }
+
+    #[test]
+    fn ror_accumulator_witout_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("ROR A");
+        cpu.flags.carry = false;
+        cpu.reg.a = 0b01010101;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry);
+        assert_eq!(cpu.reg.a, 0b00101010);
+    }
+
+    #[test]
+    fn ror_mem() {
+        let (mut cpu, mut bus, _ram) = fixture("ROR $44");
+        bus.set_byte(0b10101010, 0x44);
+        cpu.tick(&mut bus);
+
+        assert!(!cpu.flags.carry);
+        assert_eq!(bus.get_byte(0x44), 0b01010101);
     }
 }

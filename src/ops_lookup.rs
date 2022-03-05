@@ -38,10 +38,14 @@ pub enum Code {
     BPL,
     BVC,
     BVS,
+    ASL,
+    LSR,
+    ROL,
+    ROR,
     NOP,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum AddressMode {
     Immediate,
     ZeroPage,
@@ -55,6 +59,7 @@ pub enum AddressMode {
     IndirectY,
     Implied,
     Relative,
+    Accumulator,
 }
 
 #[derive(Clone, Copy)]
@@ -207,6 +212,30 @@ lazy_static! {
         l[0x10] = declare_op!(Code::BPL, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
         l[0x50] = declare_op!(Code::BVC, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
         l[0x70] = declare_op!(Code::BVS, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
+
+        l[0x0a] = declare_op!(Code::ASL, AddressMode::Accumulator, Byte(1), Cycle(2));
+        l[0x06] = declare_op!(Code::ASL, AddressMode::ZeroPage, Byte(2), Cycle(5));
+        l[0x16] = declare_op!(Code::ASL, AddressMode::ZeroPageX, Byte(2), Cycle(6));
+        l[0x0e] = declare_op!(Code::ASL, AddressMode::Absolute, Byte(3), Cycle(6));
+        l[0x1e] = declare_op!(Code::ASL, AddressMode::AbsoluteX, Byte(3), Cycle(7));
+
+        l[0x4a] = declare_op!(Code::LSR, AddressMode::Accumulator, Byte(1), Cycle(2));
+        l[0x46] = declare_op!(Code::LSR, AddressMode::ZeroPage, Byte(2), Cycle(5));
+        l[0x56] = declare_op!(Code::LSR, AddressMode::ZeroPageX, Byte(2), Cycle(6));
+        l[0x4e] = declare_op!(Code::LSR, AddressMode::Absolute, Byte(3), Cycle(6));
+        l[0x5e] = declare_op!(Code::LSR, AddressMode::AbsoluteX, Byte(3), Cycle(7));
+
+        l[0x2a] = declare_op!(Code::ROL, AddressMode::Accumulator, Byte(1), Cycle(2));
+        l[0x26] = declare_op!(Code::ROL, AddressMode::ZeroPage, Byte(2), Cycle(5));
+        l[0x36] = declare_op!(Code::ROL, AddressMode::ZeroPageX, Byte(2), Cycle(6));
+        l[0x2e] = declare_op!(Code::ROL, AddressMode::Absolute, Byte(3), Cycle(6));
+        l[0x3e] = declare_op!(Code::ROL, AddressMode::AbsoluteX, Byte(3), Cycle(7));
+
+        l[0x6a] = declare_op!(Code::ROR, AddressMode::Accumulator, Byte(1), Cycle(2));
+        l[0x66] = declare_op!(Code::ROR, AddressMode::ZeroPage, Byte(2), Cycle(5));
+        l[0x76] = declare_op!(Code::ROR, AddressMode::ZeroPageX, Byte(2), Cycle(6));
+        l[0x6e] = declare_op!(Code::ROR, AddressMode::Absolute, Byte(3), Cycle(6));
+        l[0x7e] = declare_op!(Code::ROR, AddressMode::AbsoluteX, Byte(3), Cycle(7));
 
         l[0xea] = declare_op!(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2));
 
