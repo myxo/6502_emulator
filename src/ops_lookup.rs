@@ -30,6 +30,14 @@ pub enum Code {
     SEC,
     SED,
     SEI,
+    BCC,
+    BCS,
+    BEQ,
+    BMI,
+    BNE,
+    BPL,
+    BVC,
+    BVS,
     NOP,
 }
 
@@ -46,6 +54,7 @@ pub enum AddressMode {
     IndirectX,
     IndirectY,
     Implied,
+    Relative,
 }
 
 #[derive(Clone, Copy)]
@@ -189,6 +198,15 @@ lazy_static! {
         l[0x38] = declare_op!(Code::SEC, AddressMode::Implied, Byte(1), Cycle(2));
         l[0xf8] = declare_op!(Code::SED, AddressMode::Implied, Byte(1), Cycle(2));
         l[0x78] = declare_op!(Code::SEI, AddressMode::Implied, Byte(1), Cycle(2));
+
+        l[0x90] = declare_op!(Code::BCC, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
+        l[0xb0] = declare_op!(Code::BCS, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
+        l[0xf0] = declare_op!(Code::BEQ, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
+        l[0x30] = declare_op!(Code::BMI, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
+        l[0xd0] = declare_op!(Code::BNE, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
+        l[0x10] = declare_op!(Code::BPL, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
+        l[0x50] = declare_op!(Code::BVC, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
+        l[0x70] = declare_op!(Code::BVS, AddressMode::Relative, Byte(2), Cycle(2), PageBound::Yes);
 
         l[0xea] = declare_op!(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2));
 

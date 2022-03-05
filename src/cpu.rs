@@ -36,6 +36,7 @@ impl Cpu {
     }
 
     pub fn tick(&mut self, bus: &mut Bus) {
+        println!("tick");
         if self.cycle_left > 0 {
             self.cycle_left -= 1;
             return;
@@ -49,7 +50,7 @@ impl Cpu {
         }
         let op = op.unwrap();
 
-        let (address, cross_page): (u16, bool) = match op.mode {
+        let (address, mut cross_page): (u16, bool) = match op.mode {
             AddressMode::Immediate => (self.pc + 1, false),
             AddressMode::ZeroPage => (bus.get_byte(self.pc + 1) as u16, false),
             AddressMode::ZeroPageX => (bus.get_byte(self.pc + 1) as u16 + self.reg.x as u16, false),
@@ -85,8 +86,30 @@ impl Cpu {
                 (0, false) // Do not address memory in this mode
                            // TODO: make type safe check?
             }
+            AddressMode::Relative => {
+                // this will get propper signed number
+                let relative = bus.get_byte(self.pc + 1) as i8 as i16;
+                let pc_with_offset = (self.pc + op.instruction_bytes as u16) as i16;
+
+                // just assume that input instructions are correct and we won't overflow here...
+                let new_pc = (pc_with_offset + relative) as u16;
+                let cross_memory_page = self.pc & 0xff00 != new_pc & 0xff00;
+                (new_pc, cross_memory_page)
+            }
         };
         println!("look at address: {:#04X} ", address);
+
+        self.pc += op.instruction_bytes as u16;
+        let mut additional_cycles = 0;
+
+        let mut branch_on = |cond: bool| {
+            if cond {
+                additional_cycles += 1;
+                self.pc = address;
+            } else {
+                cross_page = false;
+            }
+        };
 
         // TODO: do I need to delay values change until cycles complete?
         match op.code {
@@ -198,10 +221,33 @@ impl Cpu {
             Code::SEI => {
                 self.flags.interrupt_disabled = true;
             }
+            Code::BCC => {
+                branch_on(!self.flags.carry);
+            }
+            Code::BCS => {
+                branch_on(self.flags.carry);
+            }
+            Code::BEQ => {
+                branch_on(self.flags.zero);
+            }
+            Code::BMI => {
+                branch_on(self.flags.negative);
+            }
+            Code::BNE => {
+                branch_on(!self.flags.zero);
+            }
+            Code::BPL => {
+                branch_on(!self.flags.negative);
+            }
+            Code::BVC => {
+                branch_on(!self.flags.overdlow);
+            }
+            Code::BVS => {
+                branch_on(self.flags.overdlow);
+            }
             Code::NOP => {}
         }
-        self.pc += op.instruction_bytes as u16;
-        self.cycle_left = op.cycles;
+        self.cycle_left = op.cycles - 1 + additional_cycles;
         if cross_page && op.page_boundary_cycle {
             self.cycle_left += 1;
         }
@@ -233,6 +279,8 @@ mod tests {
         let asm = asm.as_bytes();
         assert_ok!(assemble(asm, &mut buf));
 
+        println!("Assembled code: {:X?}", buf);
+
         (*ram).borrow_mut().set_memory(&buf, 0).unwrap();
         bus.connect_device(
             Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>,
@@ -248,7 +296,8 @@ mod tests {
         cpu.reg.x = 0x56;
 
         cpu.tick(&mut bus);
-        assert_eq!(cpu.cycle_left, 5); // add 1 cycle due to page boundary cross
+        // we remove 1 cycle (that already ticked) add 1 cycle due to page boundary cross
+        assert_eq!(cpu.cycle_left, 4);
     }
 
     #[test]
@@ -564,5 +613,50 @@ mod tests {
         cpu.tick(&mut bus);
 
         assert!(cpu.flags.interrupt_disabled);
+    }
+
+    #[test]
+    fn bcc_forward() {
+        let (mut cpu, mut bus, _ram) = fixture("BCC 2");
+        cpu.flags.carry = false;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.pc, 0x4);
+    }
+
+    #[test]
+    fn bcc_forward_negative() {
+        let (mut cpu, mut bus, _ram) = fixture("BCC 2");
+        cpu.flags.carry = true;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.pc, 0x2);
+    }
+
+    #[test]
+    fn bcc_backward() {
+        let (mut cpu, mut bus, _ram) = fixture("\n");
+        //   NOP
+        // notequal:
+        //   NOP
+        //   BCC notequal
+
+        cpu.flags.carry = false;
+        // This is assembled code:
+        bus.set_byte(0xea, 0);
+        bus.set_byte(0xea, 1);
+        bus.set_byte(0x90, 2);
+        bus.set_byte(0xfd, 3);
+
+        //cpu.pc = 0xf0;
+        cpu.tick(&mut bus);
+        cpu.tick(&mut bus);
+
+        cpu.tick(&mut bus);
+        cpu.tick(&mut bus);
+
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.pc, 0x1);
     }
 }

@@ -17,15 +17,6 @@
 What's left:
 ADC
 ASL
-BCC
-BCS
-BEQ
-BMI
-BNE
-BPL
-BRK
-BVC
-BVS
 CMP
 CPX
 CPY
