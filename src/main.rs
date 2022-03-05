@@ -1,5 +1,6 @@
 pub mod bus;
 mod cpu;
+mod flags;
 mod ops_lookup;
 mod ram;
 
