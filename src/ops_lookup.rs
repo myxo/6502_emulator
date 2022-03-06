@@ -42,6 +42,12 @@ pub enum Code {
     LSR,
     ROL,
     ROR,
+    TSX,
+    TXS,
+    PHA,
+    PHP,
+    PLA,
+    PLP,
     NOP,
 }
 
@@ -236,6 +242,13 @@ lazy_static! {
         l[0x76] = declare_op!(Code::ROR, AddressMode::ZeroPageX, Byte(2), Cycle(6));
         l[0x6e] = declare_op!(Code::ROR, AddressMode::Absolute, Byte(3), Cycle(6));
         l[0x7e] = declare_op!(Code::ROR, AddressMode::AbsoluteX, Byte(3), Cycle(7));
+
+        l[0xba] = declare_op!(Code::TSX, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0x9a] = declare_op!(Code::TXS, AddressMode::Implied, Byte(1), Cycle(2));
+        l[0x48] = declare_op!(Code::PHA, AddressMode::Implied, Byte(1), Cycle(3));
+        l[0x68] = declare_op!(Code::PLA, AddressMode::Implied, Byte(1), Cycle(4));
+        l[0x08] = declare_op!(Code::PHP, AddressMode::Implied, Byte(1), Cycle(3));
+        l[0x28] = declare_op!(Code::PLP, AddressMode::Implied, Byte(1), Cycle(4));
 
         l[0xea] = declare_op!(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2));
 

@@ -12,6 +12,10 @@ pub struct Flags {
 }
 
 impl Flags {
+    pub fn new(register: u8) -> Self {
+        Self{ register }
+    }
+
     // TODO: rewrite with macros?
     pub fn carry(&self) -> bool {
         self.register & CARRY_BIT != 0
@@ -118,6 +122,14 @@ impl Flags {
         if flag != self.negative() {
             self.register = self.register ^ NEG_BIT;
         }
+    }
+
+    pub fn set_register(&mut self, reg: u8) {
+        self.register = reg;
+    }
+
+    pub fn get_register(&mut self) -> u8 {
+        self.register
     }
 }
 

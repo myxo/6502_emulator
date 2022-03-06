@@ -16,7 +16,7 @@ use cpu::Cpu;
 use ram::Ram;
 
 fn main() {
-    let mut cpu: Cpu = Default::default();
+    let mut cpu = Cpu::new();
     let mut bus = Bus::new();
     let ram = Rc::new(RefCell::new(Ram::new(0xffff as u16)));
 

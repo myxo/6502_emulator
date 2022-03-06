@@ -9,19 +9,23 @@ pub struct Registers {
     y: u8,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Cpu {
     reg: Registers,
     flags: Flags,
     pc: u16,
-    sp: u16,
+    sp: u8,
     cycle_left: u8,
 }
 
 impl Cpu {
     pub fn new() -> Self {
         Cpu {
-            ..Default::default()
+            reg: Default::default(),
+            flags: Flags::new(0u8),
+            pc: 0x0000,
+            sp: 0xff,
+            cycle_left: 0,
         }
     }
 
@@ -302,6 +306,28 @@ impl Cpu {
                     AddressMode::Accumulator => self.reg.a = result,
                     _ => bus.set_byte(result, address),
                 };
+            }
+            Code::TSX => {
+                self.reg.x = self.sp;
+            }
+            Code::TXS => {
+                self.sp = self.reg.x;
+            }
+            Code::PHA => {
+                bus.set_byte(self.reg.a, 0x0100 + self.sp as u16);
+                self.sp = self.sp.wrapping_sub(1);
+            }
+            Code::PHP => {
+                bus.set_byte(self.flags.get_register(), 0x0100 + self.sp as u16);
+                self.sp = self.sp.wrapping_sub(1);
+            }
+            Code::PLA => {
+                self.reg.a = bus.get_byte(0x0100 + self.sp.wrapping_add(1) as u16);
+                self.sp = self.sp.wrapping_add(1);
+            }
+            Code::PLP => {
+                self.flags.set_register(bus.get_byte(0x0100 + self.sp.wrapping_add(1) as u16));
+                self.sp = self.sp.wrapping_add(1);
             }
             Code::NOP => {}
         }
@@ -820,5 +846,71 @@ mod tests {
 
         assert!(!cpu.flags.carry());
         assert_eq!(bus.get_byte(0x44), 0b01010101);
+    }
+
+    #[test]
+    fn stack_init() {
+        let (cpu, _bus, _ram) = fixture("TSX\n");
+        assert_eq!(cpu.sp, 0xff);
+    }
+
+    #[test]
+    fn tsx() {
+        let (mut cpu, mut bus, _ram) = fixture("TSX\n");
+        cpu.sp = 0x15;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.x, 0x15);
+    }
+
+    #[test]
+    fn txs() {
+        let (mut cpu, mut bus, _ram) = fixture("TXS\n");
+        cpu.reg.x = 0x15;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.sp, 0x15);
+    }
+
+    #[test]
+    fn pha() {
+        let (mut cpu, mut bus, _ram) = fixture("PHA\n");
+        cpu.reg.a = 0xAB;
+        cpu.tick(&mut bus);
+
+        assert_eq!(bus.get_byte(0x01ff), 0xAB);
+        assert_eq!(cpu.sp, 0xfe);
+    }
+
+    #[test]
+    fn php() {
+        let (mut cpu, mut bus, _ram) = fixture("PHP\n");
+        cpu.flags.set_register(0xAC);
+        cpu.tick(&mut bus);
+
+        assert_eq!(bus.get_byte(0x01ff), 0xAC);
+        assert_eq!(cpu.sp, 0xfe);
+    }
+
+    #[test]
+    fn pla() {
+        let (mut cpu, mut bus, _ram) = fixture("PLA\n");
+        bus.set_byte(0xAB, 0x01ff);
+        cpu.sp = 0xfe;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0xAB);
+        assert_eq!(cpu.sp, 0xff);
+    }
+
+    #[test]
+    fn plp() {
+        let (mut cpu, mut bus, _ram) = fixture("PLP\n");
+        bus.set_byte(0xAC, 0x01ff);
+        cpu.sp = 0xfe;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.flags.get_register(), 0xAC);
+        assert_eq!(cpu.sp, 0xff);
     }
 }

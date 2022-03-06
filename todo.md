@@ -21,15 +21,9 @@ CPX
 CPY
 JMP
 JSR
-PHA
-PHP
-PLA
-PLP
 RTI
 RTS
 SBC
-TSX
-TXS
 
 # Done
 [x] Flags
