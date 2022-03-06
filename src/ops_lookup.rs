@@ -48,6 +48,8 @@ pub enum Code {
     PHP,
     PLA,
     PLP,
+    JSR,
+    RTS,
     NOP,
 }
 
@@ -249,6 +251,9 @@ lazy_static! {
         l[0x68] = declare_op!(Code::PLA, AddressMode::Implied, Byte(1), Cycle(4));
         l[0x08] = declare_op!(Code::PHP, AddressMode::Implied, Byte(1), Cycle(3));
         l[0x28] = declare_op!(Code::PLP, AddressMode::Implied, Byte(1), Cycle(4));
+
+        l[0x20] = declare_op!(Code::JSR, AddressMode::Absolute, Byte(3), Cycle(6));
+        l[0x60] = declare_op!(Code::RTS, AddressMode::Implied, Byte(1), Cycle(6));
 
         l[0xea] = declare_op!(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2));
 

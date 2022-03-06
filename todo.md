@@ -20,9 +20,7 @@ CMP
 CPX
 CPY
 JMP
-JSR
 RTI
-RTS
 SBC
 
 # Done

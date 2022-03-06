@@ -326,8 +326,29 @@ impl Cpu {
                 self.sp = self.sp.wrapping_add(1);
             }
             Code::PLP => {
-                self.flags.set_register(bus.get_byte(0x0100 + self.sp.wrapping_add(1) as u16));
+                self.flags
+                    .set_register(bus.get_byte(0x0100 + self.sp.wrapping_add(1) as u16));
                 self.sp = self.sp.wrapping_add(1);
+            }
+            Code::JSR => {
+                let pc = self.pc - 1;
+                bus.set_byte((pc & 0xff00 >> 8) as u8, 0x0100 + self.sp as u16);
+                self.sp = self.sp.wrapping_sub(1);
+
+                bus.set_byte((pc & 0x00ff) as u8, 0x0100 + self.sp as u16);
+                self.sp = self.sp.wrapping_sub(1);
+
+                self.pc = address;
+            }
+            Code::RTS => {
+                let pc_lo: u16 = bus.get_byte(0x0100 + self.sp as u16) as u16;
+                self.sp = self.sp.wrapping_add(1);
+
+                let pc_hi: u16 = bus.get_byte(0x0100 + self.sp as u16) as u16;
+                self.sp = self.sp.wrapping_add(1);
+
+                self.pc = (pc_hi << 8) & pc_lo;
+                self.pc += 1;
             }
             Code::NOP => {}
         }
@@ -912,5 +933,50 @@ mod tests {
 
         assert_eq!(cpu.flags.get_register(), 0xAC);
         assert_eq!(cpu.sp, 0xff);
+    }
+
+    #[test]
+    fn jsr_rts() {
+        // asm6502 just can't parse this =(
+        // But code seems to be ok
+        let _instructions = r#"
+            JSR $0004
+            LDX #$ab
+            NOP
+            NOP
+            NOP
+            BRK
+            LDY #$bc
+            RTS
+        "#;
+
+        // Given
+        let instructions = vec![
+            0x20, 0x09, 0x00, 0xa2, 0xab, 0xea, 0xea, 0xea, 0x00, 0xa0, 0xbc, 0x60,
+        ];
+
+        let max_memory = 0xffff;
+        let mut cpu = Cpu::new();
+        let mut bus = Bus::new();
+        let ram = Rc::new(RefCell::new(Ram::new(max_memory as u16)));
+
+        (*ram).borrow_mut().set_memory(&instructions, 0).unwrap();
+        bus.connect_device(
+            Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>,
+            0,
+            max_memory,
+        );
+
+        // When
+        for _ in 1..100 {
+            if cpu.reg.x == 0xab {
+                break;
+            }
+            cpu.tick(&mut bus);
+        }
+
+        // Then
+        assert_eq!(cpu.reg.x, 0xab);
+        assert_eq!(cpu.reg.y, 0xbc);
     }
 }

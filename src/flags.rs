@@ -13,7 +13,7 @@ pub struct Flags {
 
 impl Flags {
     pub fn new(register: u8) -> Self {
-        Self{ register }
+        Self { register }
     }
 
     // TODO: rewrite with macros?
