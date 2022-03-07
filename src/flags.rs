@@ -3,7 +3,8 @@ static ZERO_BIT: u8 = 0b0000_0010;
 static INT_BIT: u8 = 0b0000_0100;
 static DEC_BIT: u8 = 0b0000_1000;
 static BRK_BIT: u8 = 0b0001_0000;
-static OVERFLOW_BIT: u8 = 0b0010_0000;
+static _UNUSED: u8 = 0b0010_0000;
+static OVERFLOW_BIT: u8 = 0b0100_0000;
 static NEG_BIT: u8 = 0b0100_0000;
 
 #[derive(Default, Clone, Copy, PartialEq, Debug)]

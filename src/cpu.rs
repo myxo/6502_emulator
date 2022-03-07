@@ -350,6 +350,27 @@ impl Cpu {
                 self.pc = (pc_hi << 8) & pc_lo;
                 self.pc += 1;
             }
+            Code::CMP => {
+                let mem = bus.get_byte(address);
+                self.flags.set_carry(self.reg.a >= mem);
+                self.flags.set_zero(self.reg.a == mem);
+                // TODO: can I do it without sub?
+                self.flags.set_negative((self.reg.a - mem) & 0x80 != 0);
+            }
+            Code::CPX => {
+                let mem = bus.get_byte(address);
+                self.flags.set_carry(self.reg.x >= mem);
+                self.flags.set_zero(self.reg.x == mem);
+                // TODO: can I do it without sub?
+                self.flags.set_negative((self.reg.x - mem) & 0x80 != 0);
+            }
+            Code::CPY => {
+                let mem = bus.get_byte(address);
+                self.flags.set_carry(self.reg.y >= mem);
+                self.flags.set_zero(self.reg.y == mem);
+                // TODO: can I do it without sub?
+                self.flags.set_negative((self.reg.y - mem) & 0x80 != 0);
+            }
             Code::NOP => {}
         }
         self.cycle_left = op.cycles - 1 + additional_cycles;
@@ -978,5 +999,65 @@ mod tests {
         // Then
         assert_eq!(cpu.reg.x, 0xab);
         assert_eq!(cpu.reg.y, 0xbc);
+    }
+
+    #[test]
+    fn cmp_greater() {
+        let (mut cpu, mut bus, _ram) = fixture("CMP #$44\n");
+        cpu.reg.a = 0x45;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry());
+        assert!(!cpu.flags.zero());
+    }
+
+    #[test]
+    fn cmp_equal() {
+        let (mut cpu, mut bus, _ram) = fixture("CMP #$44\n");
+        cpu.reg.a = 0x44;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry());
+        assert!(cpu.flags.zero());
+    }
+
+    #[test]
+    fn cmx_greater() {
+        let (mut cpu, mut bus, _ram) = fixture("CPX #$44\n");
+        cpu.reg.x = 0x45;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry());
+        assert!(!cpu.flags.zero());
+    }
+
+    #[test]
+    fn cmy_equal() {
+        let (mut cpu, mut bus, _ram) = fixture("CPY #$44\n");
+        cpu.reg.y = 0x44;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry());
+        assert!(cpu.flags.zero());
+    }
+
+    #[test]
+    fn cmy_greater() {
+        let (mut cpu, mut bus, _ram) = fixture("CPY #$44\n");
+        cpu.reg.y = 0x45;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry());
+        assert!(!cpu.flags.zero());
+    }
+
+    #[test]
+    fn cmx_equal() {
+        let (mut cpu, mut bus, _ram) = fixture("CPX #$44\n");
+        cpu.reg.x = 0x44;
+        cpu.tick(&mut bus);
+
+        assert!(cpu.flags.carry());
+        assert!(cpu.flags.zero());
     }
 }

@@ -16,12 +16,9 @@
 
 What's left:
 ADC
-CMP
-CPX
-CPY
+SBC
 JMP
 RTI
-SBC
 
 # Done
 [x] Flags

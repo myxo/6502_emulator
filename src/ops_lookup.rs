@@ -50,6 +50,10 @@ pub enum Code {
     PLP,
     JSR,
     RTS,
+    CMP,
+    CPX,
+    CPY,
+    JMP,
     NOP,
 }
 
@@ -254,6 +258,26 @@ lazy_static! {
 
         l[0x20] = declare_op!(Code::JSR, AddressMode::Absolute, Byte(3), Cycle(6));
         l[0x60] = declare_op!(Code::RTS, AddressMode::Implied, Byte(1), Cycle(6));
+
+        l[0xc9] = declare_op!(Code::CMP, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0xc5] = declare_op!(Code::CMP, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0xd5] = declare_op!(Code::CMP, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0xcd] = declare_op!(Code::CMP, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0xdd] = declare_op!(Code::CMP, AddressMode::AbsoluteX, Byte(3), Cycle(4), PageBound::Yes);
+        l[0xd9] = declare_op!(Code::CMP, AddressMode::AbsoluteY, Byte(3), Cycle(4), PageBound::Yes);
+        l[0xc1] = declare_op!(Code::CMP, AddressMode::IndirectX, Byte(2), Cycle(6));
+        l[0xd1] = declare_op!(Code::CMP, AddressMode::IndirectY, Byte(2), Cycle(5), PageBound::Yes);
+
+        l[0xe0] = declare_op!(Code::CPX, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0xe4] = declare_op!(Code::CPX, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0xec] = declare_op!(Code::CPX, AddressMode::Absolute, Byte(3), Cycle(4));
+
+        l[0xc0] = declare_op!(Code::CPY, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0xc4] = declare_op!(Code::CPY, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0xcc] = declare_op!(Code::CPY, AddressMode::Absolute, Byte(3), Cycle(4));
+
+        l[0x4c] = declare_op!(Code::JMP, AddressMode::Absolute, Byte(3), Cycle(3));
+        l[0x6c] = declare_op!(Code::JMP, AddressMode::Indirect, Byte(3), Cycle(5));
 
         l[0xea] = declare_op!(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2));
 
