@@ -350,6 +350,9 @@ impl Cpu {
                 self.pc = (pc_hi << 8) & pc_lo;
                 self.pc += 1;
             }
+            Code::JMP => {
+                self.pc = address;
+            }
             Code::CMP => {
                 let mem = bus.get_byte(address);
                 self.flags.set_carry(self.reg.a >= mem);
@@ -1059,5 +1062,23 @@ mod tests {
 
         assert!(cpu.flags.carry());
         assert!(cpu.flags.zero());
+    }
+
+    #[test]
+    fn jmp_abs() {
+        let (mut cpu, mut bus, _ram) = fixture("JMP $5597");
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.pc, 0x5597);
+    }
+
+    #[test]
+    fn jmp_ind() {
+        let (mut cpu, mut bus, _ram) = fixture("JMP ($5597)");
+        bus.set_byte(0x00, 0x5597);
+        bus.set_byte(0x55, 0x5598);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.pc, 0x5500);
     }
 }
