@@ -17,7 +17,6 @@
 What's left:
 ADC
 SBC
-JMP
 RTI
 
 # Done

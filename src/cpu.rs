@@ -2,6 +2,10 @@ use crate::bus::Bus;
 use crate::flags::Flags;
 use crate::ops_lookup::{AddressMode, Code, OPCODE_TABLE};
 
+fn merge_bytes(hi: u8, lo: u8) -> u16 {
+    ((hi as u16) << 8) + lo as u16
+}
+
 #[derive(Default, Clone, Copy)]
 pub struct Registers {
     a: u8,
@@ -63,8 +67,18 @@ impl Cpu {
                 (result, cross_memory_page)
             }
             AddressMode::Indirect => {
-                let indirect = bus.get_two_bytes(self.pc + 1);
-                (bus.get_two_bytes(indirect), false)
+                let lo = bus.get_byte(self.pc + 1);
+                let hi = bus.get_byte(self.pc + 2);
+                if lo == 0xff {
+                    // CPU bug: we crossed page bound, however we read
+                    // high byte not from next page, but from current.
+                    let lo_res = bus.get_byte(merge_bytes(hi, 0xff));
+                    let hi_res = bus.get_byte(merge_bytes(hi, 0x00));
+
+                    (merge_bytes(hi_res, lo_res), false)
+                } else {
+                    (bus.get_two_bytes(merge_bytes(hi, lo)), false)
+                }
             }
             AddressMode::IndirectX => {
                 let arg = bus.get_byte(self.pc + 1) as u16;
@@ -1080,5 +1094,16 @@ mod tests {
         cpu.tick(&mut bus);
 
         assert_eq!(cpu.pc, 0x5500);
+    }
+
+    #[test]
+    fn jmp_page_boundary_bug() {
+        let (mut cpu, mut bus, _ram) = fixture("JMP ($30ff)");
+        bus.set_byte(0x40, 0x3000);
+        bus.set_byte(0x80, 0x30ff);
+        bus.set_byte(0x50, 0x3100);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.pc, 0x4080);
     }
 }
