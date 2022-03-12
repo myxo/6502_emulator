@@ -56,6 +56,8 @@ pub enum Code {
     JMP,
     ADC,
     SBC,
+    RTI,
+    BRK,
     NOP,
 }
 
@@ -298,6 +300,9 @@ lazy_static! {
         l[0xf9] = declare_op!(Code::SBC, AddressMode::AbsoluteY, Byte(3), Cycle(4), PageBound::Yes);
         l[0xe1] = declare_op!(Code::SBC, AddressMode::IndirectX, Byte(2), Cycle(6));
         l[0xf1] = declare_op!(Code::SBC, AddressMode::IndirectY, Byte(2), Cycle(5), PageBound::Yes);
+
+        l[0x40] = declare_op!(Code::RTI, AddressMode::Implied, Byte(1), Cycle(6));
+        l[0x00] = declare_op!(Code::BRK, AddressMode::Implied, Byte(1), Cycle(6));
 
         l[0xea] = declare_op!(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2));
 

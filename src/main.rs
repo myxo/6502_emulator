@@ -18,7 +18,7 @@ use ram::Ram;
 fn main() {
     let mut cpu = Cpu::new();
     let mut bus = Bus::new();
-    let ram = Rc::new(RefCell::new(Ram::new(0xffff as u16)));
+    let ram = Rc::new(RefCell::new(Ram::new(0xffff)));
 
     // let asm = "LDA #1\nADC #1\nCMP #2".as_bytes();
     let asm = "LDA #1\nADC #1\nCMP #2".as_bytes();

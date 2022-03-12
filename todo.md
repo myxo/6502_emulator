@@ -13,13 +13,10 @@
 [ ] CPU debug mode (like gdb)?
 
 # Current
-
-What's left:
-ADC
-SBC
-RTI
+[ ] Simple test program
 
 # Done
+[x] Cpu instructions
 [x] Flags
 [x] Page boundary
 [x] Complete LDA without page boundary

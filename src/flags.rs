@@ -129,7 +129,7 @@ impl Flags {
         self.register = reg;
     }
 
-    pub fn get_register(&mut self) -> u8 {
+    pub fn get_register(&self) -> u8 {
         self.register
     }
 }

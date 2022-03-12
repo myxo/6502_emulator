@@ -2,6 +2,9 @@ use crate::bus::Bus;
 use crate::flags::Flags;
 use crate::ops_lookup::{AddressMode, Code, OPCODE_TABLE};
 
+static START_PC: u16 = 0xfffc;
+static INTERRUPT_PC: u16 = 0xfffe;
+
 fn merge_bytes(hi: u8, lo: u8) -> u16 {
     ((hi as u16) << 8) + lo as u16
 }
@@ -31,6 +34,25 @@ impl Cpu {
             sp: 0xff,
             cycle_left: 0,
         }
+    }
+
+    pub fn reset(&mut self, bus: &Bus) {
+        self.reg = Default::default();
+        self.flags = Flags::new(0u8);
+        self.sp = 0xff;
+        self.cycle_left = 0;
+
+        self.pc = bus.get_two_bytes(START_PC);
+    }
+
+    pub fn nmi(&mut self, bus: &mut Bus) {
+        self.write_u16_to_stack(bus, self.pc);
+        self.write_u8_to_stack(bus, self.flags.get_register());
+
+        self.pc = bus.get_two_bytes(INTERRUPT_PC);
+        // println!("nmi: this is new pc: {:#04X}", self.pc);
+
+        // TODO: takes 8 (?) cycles
     }
 
     pub fn tick(&mut self, bus: &mut Bus) {
@@ -328,40 +350,25 @@ impl Cpu {
                 self.sp = self.reg.x;
             }
             Code::PHA => {
-                bus.set_byte(self.reg.a, 0x0100 + self.sp as u16);
-                self.sp = self.sp.wrapping_sub(1);
+                self.write_u8_to_stack(bus, self.reg.a);
             }
             Code::PHP => {
-                bus.set_byte(self.flags.get_register(), 0x0100 + self.sp as u16);
-                self.sp = self.sp.wrapping_sub(1);
+                self.write_u8_to_stack(bus, self.flags.get_register());
             }
             Code::PLA => {
-                self.reg.a = bus.get_byte(0x0100 + self.sp.wrapping_add(1) as u16);
-                self.sp = self.sp.wrapping_add(1);
+                let a = self.read_u8_from_stack(bus);
+                self.reg.a = a;
             }
             Code::PLP => {
-                self.flags
-                    .set_register(bus.get_byte(0x0100 + self.sp.wrapping_add(1) as u16));
-                self.sp = self.sp.wrapping_add(1);
+                let register = self.read_u8_from_stack(bus);
+                self.flags.set_register(register);
             }
             Code::JSR => {
-                let pc = self.pc - 1;
-                bus.set_byte((pc & 0xff00 >> 8) as u8, 0x0100 + self.sp as u16);
-                self.sp = self.sp.wrapping_sub(1);
-
-                bus.set_byte((pc & 0x00ff) as u8, 0x0100 + self.sp as u16);
-                self.sp = self.sp.wrapping_sub(1);
-
+                self.write_u16_to_stack(bus, self.pc - 1);
                 self.pc = address;
             }
             Code::RTS => {
-                let pc_lo: u16 = bus.get_byte(0x0100 + self.sp as u16) as u16;
-                self.sp = self.sp.wrapping_add(1);
-
-                let pc_hi: u16 = bus.get_byte(0x0100 + self.sp as u16) as u16;
-                self.sp = self.sp.wrapping_add(1);
-
-                self.pc = (pc_hi << 8) & pc_lo;
+                self.pc = self.read_u16_from_stack(bus);
                 self.pc += 1;
             }
             Code::JMP => {
@@ -396,6 +403,17 @@ impl Cpu {
                 let mem = bus.get_byte(address);
                 self.adc_impl(!mem);
             }
+            Code::BRK => {
+                if !self.flags.interrupt_disabled() {
+                    self.nmi(bus);
+                    self.flags.set_break_cmd(true);
+                }
+            }
+            Code::RTI => {
+                let register = self.read_u8_from_stack(bus);
+                self.flags.set_register(register);
+                self.pc = self.read_u16_from_stack(bus) + 1;
+            }
             Code::NOP => {}
         }
         self.cycle_left = op.cycles - 1 + additional_cycles;
@@ -428,6 +446,40 @@ impl Cpu {
         self.reg.a = res;
         self.update_n_z_flags(self.reg.a);
     }
+
+    fn write_u8_to_stack(&mut self, bus: &mut Bus, data: u8) {
+        // println!("write {:#04X} to stack at byte {:#04X}", data, 0x0100 + self.sp as u16);
+        bus.set_byte(data, 0x0100 + self.sp as u16);
+        self.sp = self.sp.wrapping_sub(1);
+    }
+
+    fn read_u8_from_stack(&mut self, bus: &mut Bus) -> u8{
+        self.sp = self.sp.wrapping_add(1);
+        // println!("get byte from stack {:#04X}", 0x0100 + self.sp as u16);
+        bus.get_byte(0x0100 + self.sp as u16)
+    }
+
+    fn write_u16_to_stack(&mut self, bus: &mut Bus, data: u16) {
+        // println!("write {:#04X} to stack at byte {:#04X}", ((data & 0xff00) >> 8) as u8, 0x0100 + self.sp as u16);
+        bus.set_byte(((data & 0xff00) >> 8) as u8, 0x0100 + self.sp as u16);
+        self.sp = self.sp.wrapping_sub(1);
+
+        // println!("write {:#04X} to stack at byte {:#04X}", (data & 0x00ff) as u8, 0x0100 + self.sp as u16);
+        bus.set_byte((data & 0x00ff) as u8, 0x0100 + self.sp as u16);
+        self.sp = self.sp.wrapping_sub(1);
+    }
+
+    fn read_u16_from_stack(&mut self, bus: &mut Bus) -> u16{
+        self.sp = self.sp.wrapping_add(1);
+        let pc_lo: u16 = bus.get_byte(0x0100 + self.sp as u16) as u16;
+        // println!("get byte {:#04X} from stack {:#04X}", pc_lo, 0x0100 + self.sp as u16);
+
+        self.sp = self.sp.wrapping_add(1);
+        let pc_hi: u16 = bus.get_byte(0x0100 + self.sp as u16) as u16;
+        // println!("get byte {:#04X} from stack {:#04X}", pc_hi, 0x0100 + self.sp as u16);
+
+        (pc_hi << 8) | pc_lo
+    }
 }
 
 #[cfg(test)]
@@ -444,7 +496,7 @@ mod tests {
         let max_memory = 0xffff;
         let cpu = Cpu::new();
         let mut bus = Bus::new();
-        let ram = Rc::new(RefCell::new(Ram::new(max_memory as u16)));
+        let ram = Rc::new(RefCell::new(Ram::new(max_memory)));
 
         let mut buf = Vec::<u8>::new();
         let asm = asm.as_bytes();
@@ -456,7 +508,7 @@ mod tests {
         bus.connect_device(
             Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>,
             0,
-            max_memory,
+            max_memory as u16,
         );
         (cpu, bus, ram)
     }
@@ -1024,13 +1076,13 @@ mod tests {
         let max_memory = 0xffff;
         let mut cpu = Cpu::new();
         let mut bus = Bus::new();
-        let ram = Rc::new(RefCell::new(Ram::new(max_memory as u16)));
+        let ram = Rc::new(RefCell::new(Ram::new(max_memory)));
 
         (*ram).borrow_mut().set_memory(&instructions, 0).unwrap();
         bus.connect_device(
             Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>,
             0,
-            max_memory,
+            max_memory as u16,
         );
 
         // When
@@ -1188,8 +1240,6 @@ mod tests {
         cpu.reg.a = 0x01;
         cpu.flags.set_carry(false);
         cpu.tick(&mut bus);
-        
-        println!("overflow in test: {}", cpu.flags.overflow());
 
         assert_eq!(cpu.reg.a, 0x80);
         assert!(!cpu.flags.carry());
@@ -1332,25 +1382,47 @@ mod tests {
         assert!(!cpu.flags.negative());
     }
 
-//    #[test]
-//    fn adc_overflow() {
-//        let (mut cpu, mut bus, _ram) = fixture("ADC #$f0");
-//        cpu.reg.a = 0x15;
-//        cpu.tick(&mut bus);
-//
-//        assert_eq!(cpu.reg.a, 0x5);
-//        assert!(cpu.flags.carry());
-//        assert!(!cpu.flags.overflow());
-//    }
-//
-//    #[test]
-//    fn adc_overflow_flag() {
-//        let (mut cpu, mut bus, _ram) = fixture("ADC #$f0");
-//        cpu.reg.a = 0x80;
-//        cpu.tick(&mut bus);
-//
-//        assert_eq!(cpu.reg.a, 0x70);
-//        assert!(cpu.flags.carry());
-//        assert!(cpu.flags.overflow());
-//    }
+    #[test]
+    fn brk_rti() {
+        let _instructions = r#"
+            LDA #$05
+            BRK
+            LDX #$05
+            NOP
+            NOP
+            LDY #$05
+            RTI
+        "#;
+
+        // Given
+        let instructions = vec![
+            0xa9, 0x05, 0x00, 0xa2, 0x05, 0xea, 0xea, 0xa0, 0x05, 0x40
+        ];
+
+        let max_memory_offset = 0xffff as u16;
+        let mut cpu = Cpu::new();
+        let mut bus = Bus::new();
+        let ram = Rc::new(RefCell::new(Ram::new(max_memory_offset as usize + 1)));
+
+        (*ram).borrow_mut().set_memory(&instructions, 0).unwrap();
+        bus.connect_device(
+            Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>,
+            0,
+            max_memory_offset,
+        );
+        bus.set_byte(0x07, 0xfffe);
+        bus.set_byte(0x00, 0xffff);
+
+        // When
+        for _ in 1..100 {
+            if cpu.reg.x == 0x05 {
+                break;
+            }
+            cpu.tick(&mut bus);
+        }
+
+        // Then
+        assert_eq!(cpu.reg.x, 0x05);
+        assert_eq!(cpu.reg.y, 0x05);
+    }
 }

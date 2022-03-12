@@ -8,9 +8,9 @@ pub struct Ram {
 pub struct SetMemoryError {}
 
 impl Ram {
-    pub fn new(size: u16) -> Self {
+    pub fn new(size: usize) -> Self {
         Ram {
-            memory: vec![0; size as usize],
+            memory: vec![0; size],
         }
     }
 
@@ -33,6 +33,10 @@ impl Device for Ram {
 
     fn get_byte(&self, offset: u16) -> u8 {
         self.memory[offset as usize]
+    }
+
+    fn get_bytes_slice(&self, from: u16, to: u16) -> Vec<u8> {
+        self.memory[from as usize..to as usize].to_vec()
     }
 }
 
