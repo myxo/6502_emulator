@@ -390,50 +390,11 @@ impl Cpu {
             }
             Code::ADC => {
                 let mem = bus.get_byte(address);
-
-                let mut res = self.reg.a as u16 + mem as u16;
-                if self.flags.carry() {
-                    res += 1;
-                }
-                self.flags.set_carry(res & 0xff00 != 0);
-                let res = (res & 0x00ff) as u8;
-
-                let a_bit = self.reg.a & 0x80 != 0;
-                let m_bit = mem & 0x80 != 0;
-                let res_bit = res & 0x80 != 0;
-
-                let a_m_bits_same = !(a_bit ^ m_bit);
-                let a_res_bits_diff = a_bit ^ res_bit;
-
-                self.flags.set_overflow(a_m_bits_same && a_res_bits_diff);
-                self.reg.a = res;
-                self.update_n_z_flags(self.reg.a);
+                self.adc_impl(mem);
             }
             Code::SBC => {
                 let mem = bus.get_byte(address);
-                let mem = !mem;
-
-                println!("Hey!");
-                let mut res = self.reg.a as u16 + mem as u16;
-                if self.flags.carry() {
-                    res += 1;
-                }
-                let res = res as u16;
-                println!("res: {:#04X}", res);
-                self.flags.set_carry(res & 0xff00 != 0);
-                let res = (res & 0x00ff) as u8;
-                println!("res: {:#04X}", res);
-
-                let a_bit = self.reg.a & 0x80 != 0;
-                let m_bit = mem & 0x80 != 0;
-                let res_bit = res & 0x80 != 0;
-
-                let a_m_bits_same = !(a_bit ^ m_bit);
-                let a_res_bits_diff = a_bit ^ res_bit;
-
-                self.flags.set_overflow(a_m_bits_same && a_res_bits_diff);
-                self.reg.a = res;
-                self.update_n_z_flags(self.reg.a);
+                self.adc_impl(!mem);
             }
             Code::NOP => {}
         }
@@ -446,6 +407,26 @@ impl Cpu {
     fn update_n_z_flags(&mut self, new_val: u8) {
         self.flags.set_zero(new_val == 0);
         self.flags.set_negative(new_val & 0b10000000 != 0);
+    }
+
+    fn adc_impl(&mut self, mem_value: u8) {
+        let mut res = self.reg.a as u16 + mem_value as u16;
+        if self.flags.carry() {
+            res += 1;
+        }
+        self.flags.set_carry(res & 0xff00 != 0);
+        let res = (res & 0x00ff) as u8;
+
+        let a_bit = self.reg.a & 0x80 != 0;
+        let m_bit = mem_value & 0x80 != 0;
+        let res_bit = res & 0x80 != 0;
+
+        let a_m_bits_same = !(a_bit ^ m_bit);
+        let a_res_bits_diff = a_bit ^ res_bit;
+
+        self.flags.set_overflow(a_m_bits_same && a_res_bits_diff);
+        self.reg.a = res;
+        self.update_n_z_flags(self.reg.a);
     }
 }
 
