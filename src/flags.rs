@@ -5,7 +5,7 @@ static DEC_BIT: u8 = 0b0000_1000;
 static BRK_BIT: u8 = 0b0001_0000;
 static _UNUSED: u8 = 0b0010_0000;
 static OVERFLOW_BIT: u8 = 0b0100_0000;
-static NEG_BIT: u8 = 0b0100_0000;
+static NEG_BIT: u8 = 0b1000_0000;
 
 #[derive(Default, Clone, Copy, PartialEq, Debug)]
 pub struct Flags {
@@ -152,5 +152,16 @@ mod tests {
 
         flags.set_zero(true);
         assert_eq!(flags.zero_byte(), ZERO_BIT);
+    }
+
+    #[test]
+    fn set_several_flags() {
+        let mut flags: Flags = Default::default();
+
+        flags.set_overflow(true);
+        assert!(flags.overflow());
+        flags.set_negative(true);
+        assert!(flags.overflow());
+        assert!(flags.negative());
     }
 }

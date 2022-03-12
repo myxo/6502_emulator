@@ -54,6 +54,8 @@ pub enum Code {
     CPX,
     CPY,
     JMP,
+    ADC,
+    SBC,
     NOP,
 }
 
@@ -278,6 +280,24 @@ lazy_static! {
 
         l[0x4c] = declare_op!(Code::JMP, AddressMode::Absolute, Byte(3), Cycle(3));
         l[0x6c] = declare_op!(Code::JMP, AddressMode::Indirect, Byte(3), Cycle(5));
+
+        l[0x69] = declare_op!(Code::ADC, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0x65] = declare_op!(Code::ADC, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0x75] = declare_op!(Code::ADC, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0x6d] = declare_op!(Code::ADC, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0x7d] = declare_op!(Code::ADC, AddressMode::AbsoluteX, Byte(3), Cycle(4), PageBound::Yes);
+        l[0x79] = declare_op!(Code::ADC, AddressMode::AbsoluteY, Byte(3), Cycle(4), PageBound::Yes);
+        l[0x61] = declare_op!(Code::ADC, AddressMode::IndirectX, Byte(2), Cycle(6));
+        l[0x71] = declare_op!(Code::ADC, AddressMode::IndirectY, Byte(2), Cycle(5), PageBound::Yes);
+
+        l[0xe9] = declare_op!(Code::SBC, AddressMode::Immediate, Byte(2), Cycle(2));
+        l[0xe5] = declare_op!(Code::SBC, AddressMode::ZeroPage, Byte(2), Cycle(3));
+        l[0xf5] = declare_op!(Code::SBC, AddressMode::ZeroPageX, Byte(2), Cycle(4));
+        l[0xed] = declare_op!(Code::SBC, AddressMode::Absolute, Byte(3), Cycle(4));
+        l[0xfd] = declare_op!(Code::SBC, AddressMode::AbsoluteX, Byte(3), Cycle(4), PageBound::Yes);
+        l[0xf9] = declare_op!(Code::SBC, AddressMode::AbsoluteY, Byte(3), Cycle(4), PageBound::Yes);
+        l[0xe1] = declare_op!(Code::SBC, AddressMode::IndirectX, Byte(2), Cycle(6));
+        l[0xf1] = declare_op!(Code::SBC, AddressMode::IndirectY, Byte(2), Cycle(5), PageBound::Yes);
 
         l[0xea] = declare_op!(Code::NOP, AddressMode::Implied, Byte(1), Cycle(2));
 

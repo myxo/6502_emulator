@@ -388,6 +388,53 @@ impl Cpu {
                 // TODO: can I do it without sub?
                 self.flags.set_negative((self.reg.y - mem) & 0x80 != 0);
             }
+            Code::ADC => {
+                let mem = bus.get_byte(address);
+
+                let mut res = self.reg.a as u16 + mem as u16;
+                if self.flags.carry() {
+                    res += 1;
+                }
+                self.flags.set_carry(res & 0xff00 != 0);
+                let res = (res & 0x00ff) as u8;
+
+                let a_bit = self.reg.a & 0x80 != 0;
+                let m_bit = mem & 0x80 != 0;
+                let res_bit = res & 0x80 != 0;
+
+                let a_m_bits_same = !(a_bit ^ m_bit);
+                let a_res_bits_diff = a_bit ^ res_bit;
+
+                self.flags.set_overflow(a_m_bits_same && a_res_bits_diff);
+                self.reg.a = res;
+                self.update_n_z_flags(self.reg.a);
+            }
+            Code::SBC => {
+                let mem = bus.get_byte(address);
+                let mem = !mem;
+
+                println!("Hey!");
+                let mut res = self.reg.a as u16 + mem as u16;
+                if self.flags.carry() {
+                    res += 1;
+                }
+                let res = res as u16;
+                println!("res: {:#04X}", res);
+                self.flags.set_carry(res & 0xff00 != 0);
+                let res = (res & 0x00ff) as u8;
+                println!("res: {:#04X}", res);
+
+                let a_bit = self.reg.a & 0x80 != 0;
+                let m_bit = mem & 0x80 != 0;
+                let res_bit = res & 0x80 != 0;
+
+                let a_m_bits_same = !(a_bit ^ m_bit);
+                let a_res_bits_diff = a_bit ^ res_bit;
+
+                self.flags.set_overflow(a_m_bits_same && a_res_bits_diff);
+                self.reg.a = res;
+                self.update_n_z_flags(self.reg.a);
+            }
             Code::NOP => {}
         }
         self.cycle_left = op.cycles - 1 + additional_cycles;
@@ -398,7 +445,7 @@ impl Cpu {
 
     fn update_n_z_flags(&mut self, new_val: u8) {
         self.flags.set_zero(new_val == 0);
-        self.flags.set_negative(new_val & 0b1000000 != 0);
+        self.flags.set_negative(new_val & 0b10000000 != 0);
     }
 }
 
@@ -1106,4 +1153,223 @@ mod tests {
 
         assert_eq!(cpu.pc, 0x4080);
     }
+
+    #[test]
+    fn adc_zero_zero() {
+        let (mut cpu, mut bus, _ram) = fixture("ADC #$0");
+        cpu.reg.a = 0x0;
+        cpu.flags.set_carry(false);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x0);
+        assert!(!cpu.flags.carry());
+        assert!(!cpu.flags.overflow());
+    }
+
+    #[test]
+    fn adc_no_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("ADC #$5");
+        cpu.reg.a = 0x15;
+        cpu.flags.set_carry(false);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x1a);
+        assert!(!cpu.flags.carry());
+        assert!(!cpu.flags.overflow());
+    }
+
+    #[test]
+    fn adc_with_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("ADC #$5");
+        cpu.reg.a = 0x15;
+        cpu.flags.set_carry(true);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x1b);
+        assert!(!cpu.flags.carry());
+        assert!(!cpu.flags.overflow());
+    }
+
+    #[test]
+    fn adc_carry_bit_is_setted() {
+        let (mut cpu, mut bus, _ram) = fixture("ADC #$f0");
+        cpu.reg.a = 0x15;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x5);
+        assert!(cpu.flags.carry());
+        assert!(!cpu.flags.overflow());
+    }
+
+    #[test]
+    fn adc_overflow_from_pos() {
+        let (mut cpu, mut bus, _ram) = fixture("ADC #$7f");
+        cpu.reg.a = 0x01;
+        cpu.flags.set_carry(false);
+        cpu.tick(&mut bus);
+        
+        println!("overflow in test: {}", cpu.flags.overflow());
+
+        assert_eq!(cpu.reg.a, 0x80);
+        assert!(!cpu.flags.carry());
+        assert!(cpu.flags.overflow());
+        assert!(cpu.flags.negative());
+    }
+
+    #[test]
+    fn adc_overflow_from_neg() {
+        let (mut cpu, mut bus, _ram) = fixture("ADC #$f0");
+        cpu.reg.a = 0x80;
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x70);
+        assert!(cpu.flags.carry());
+        assert!(cpu.flags.overflow());
+    }
+
+    #[test]
+    fn adc_overflow_on_edge() {
+        // 63 + 64 + 1 = 128
+        let (mut cpu, mut bus, _ram) = fixture("ADC #$40");
+        cpu.reg.a = 0x3f;
+        cpu.flags.set_carry(true);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x80);
+        assert!(!cpu.flags.carry());
+        assert!(cpu.flags.overflow());
+        assert!(cpu.flags.negative())
+    }
+
+    #[test]
+    fn sbc_zero_from_zero() {
+        let (mut cpu, mut bus, _ram) = fixture("SBC #$0");
+        cpu.reg.a = 0x0;
+        cpu.flags.set_carry(false);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0xff);
+        assert!(!cpu.flags.carry());
+    }
+
+    #[test]
+    fn sbc_zero_from_zero_with_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("SBC #$0");
+        cpu.reg.a = 0x0;
+        cpu.flags.set_carry(true);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x00);
+        assert!(cpu.flags.carry());
+        assert!(!cpu.flags.overflow());
+        assert!(cpu.flags.zero());
+    }
+
+    #[test]
+    fn sbc_minus_one_from_zero() {
+        let (mut cpu, mut bus, _ram) = fixture("SBC #$ff");
+        cpu.reg.a = 0x0;
+        cpu.flags.set_carry(false);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x00);
+        assert!(!cpu.flags.carry());
+    }
+
+    #[test]
+    fn sbc_minus_one_from_zero_with_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("SBC #$ff");
+        cpu.reg.a = 0x0;
+        cpu.flags.set_carry(true);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x01);
+        assert!(!cpu.flags.carry());
+        assert!(!cpu.flags.overflow());
+    }
+
+    #[test]
+    fn sbc_no_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("SBC #$5");
+        cpu.reg.a = 0x15;
+        cpu.flags.set_carry(false);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x0f);
+        assert!(cpu.flags.carry());
+        assert!(!cpu.flags.overflow());
+    }
+
+    #[test]
+    fn sbc_carry() {
+        let (mut cpu, mut bus, _ram) = fixture("SBC #$5");
+        cpu.reg.a = 0x15;
+        cpu.flags.set_carry(true);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x10);
+        assert!(cpu.flags.carry());
+        assert!(!cpu.flags.overflow());
+    }
+
+    #[test]
+    fn sbc_overflow_from_neg_pos() {
+        let (mut cpu, mut bus, _ram) = fixture("SBC #$01");
+        cpu.reg.a = 0x80;
+        cpu.flags.set_carry(true);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x7f);
+        assert!(cpu.flags.carry());
+        assert!(cpu.flags.overflow());
+    }
+
+    #[test]
+    fn sbc_overflow_from_pos_neg() {
+        let (mut cpu, mut bus, _ram) = fixture("SBC #$ff");
+        cpu.reg.a = 0x7f;
+        cpu.flags.set_carry(true);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x80);
+        assert!(!cpu.flags.carry());
+        assert!(cpu.flags.overflow());
+        assert!(cpu.flags.negative());
+    }
+
+    #[test]
+    fn sbc_overflow_on_edge() {
+        // -64 - 64 - 1 = -129
+        let (mut cpu, mut bus, _ram) = fixture("SBC #$40");
+        cpu.reg.a = 0xc0;
+        cpu.flags.set_carry(false);
+        cpu.tick(&mut bus);
+
+        assert_eq!(cpu.reg.a, 0x7f);
+        assert!(cpu.flags.carry());
+        assert!(cpu.flags.overflow());
+        assert!(!cpu.flags.negative());
+    }
+
+//    #[test]
+//    fn adc_overflow() {
+//        let (mut cpu, mut bus, _ram) = fixture("ADC #$f0");
+//        cpu.reg.a = 0x15;
+//        cpu.tick(&mut bus);
+//
+//        assert_eq!(cpu.reg.a, 0x5);
+//        assert!(cpu.flags.carry());
+//        assert!(!cpu.flags.overflow());
+//    }
+//
+//    #[test]
+//    fn adc_overflow_flag() {
+//        let (mut cpu, mut bus, _ram) = fixture("ADC #$f0");
+//        cpu.reg.a = 0x80;
+//        cpu.tick(&mut bus);
+//
+//        assert_eq!(cpu.reg.a, 0x70);
+//        assert!(cpu.flags.carry());
+//        assert!(cpu.flags.overflow());
+//    }
 }
