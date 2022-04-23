@@ -496,7 +496,7 @@ mod tests {
         let max_memory = 0xffff;
         let cpu = Cpu::new();
         let mut bus = Bus::new();
-        let ram = Rc::new(RefCell::new(Ram::new(max_memory)));
+        let ram = Rc::new(RefCell::new(Ram::new(max_memory + 1)));
 
         let mut buf = Vec::<u8>::new();
         let asm = asm.as_bytes();
@@ -650,7 +650,7 @@ mod tests {
 
     #[test]
     fn tax() {
-        let (mut cpu, mut bus, _ram) = fixture("TAX\n");
+        let (mut cpu, mut bus, _ram) = fixture("TAX");
         cpu.reg.a = 0x0a;
         cpu.tick(&mut bus);
 
@@ -659,7 +659,7 @@ mod tests {
 
     #[test]
     fn txa() {
-        let (mut cpu, mut bus, _ram) = fixture("TXA\n");
+        let (mut cpu, mut bus, _ram) = fixture("TXA");
         cpu.reg.x = 0x0a;
         cpu.tick(&mut bus);
 
@@ -668,7 +668,7 @@ mod tests {
 
     #[test]
     fn tay() {
-        let (mut cpu, mut bus, _ram) = fixture("TAY\n");
+        let (mut cpu, mut bus, _ram) = fixture("TAY");
         cpu.reg.a = 0x0a;
         cpu.tick(&mut bus);
 
@@ -677,7 +677,7 @@ mod tests {
 
     #[test]
     fn tya() {
-        let (mut cpu, mut bus, _ram) = fixture("TYA\n");
+        let (mut cpu, mut bus, _ram) = fixture("TYA");
         cpu.reg.y = 0x0a;
         cpu.tick(&mut bus);
 
@@ -704,7 +704,7 @@ mod tests {
 
     #[test]
     fn inx() {
-        let (mut cpu, mut bus, _ram) = fixture("INX\n");
+        let (mut cpu, mut bus, _ram) = fixture("INX");
         cpu.reg.x = 10;
         cpu.tick(&mut bus);
 
@@ -713,7 +713,7 @@ mod tests {
 
     #[test]
     fn iny() {
-        let (mut cpu, mut bus, _ram) = fixture("INY\n");
+        let (mut cpu, mut bus, _ram) = fixture("INY");
         cpu.reg.y = 10;
         cpu.tick(&mut bus);
 
@@ -722,7 +722,7 @@ mod tests {
 
     #[test]
     fn dex() {
-        let (mut cpu, mut bus, _ram) = fixture("DEX\n");
+        let (mut cpu, mut bus, _ram) = fixture("DEX");
         cpu.reg.x = 10;
         cpu.tick(&mut bus);
 
@@ -731,7 +731,7 @@ mod tests {
 
     #[test]
     fn dey() {
-        let (mut cpu, mut bus, _ram) = fixture("DEY\n");
+        let (mut cpu, mut bus, _ram) = fixture("DEY");
         cpu.reg.y = 10;
         cpu.tick(&mut bus);
 
@@ -777,7 +777,7 @@ mod tests {
 
     #[test]
     fn clc() {
-        let (mut cpu, mut bus, _ram) = fixture("CLC\n");
+        let (mut cpu, mut bus, _ram) = fixture("CLC");
         cpu.flags.set_carry(true);
         cpu.tick(&mut bus);
 
@@ -786,7 +786,7 @@ mod tests {
 
     #[test]
     fn cld() {
-        let (mut cpu, mut bus, _ram) = fixture("CLD\n");
+        let (mut cpu, mut bus, _ram) = fixture("CLD");
         cpu.flags.set_decimal_mode(true);
         cpu.tick(&mut bus);
 
@@ -795,7 +795,7 @@ mod tests {
 
     #[test]
     fn cli() {
-        let (mut cpu, mut bus, _ram) = fixture("CLI\n");
+        let (mut cpu, mut bus, _ram) = fixture("CLI");
         cpu.flags.set_interrupt_disabled(true);
         cpu.tick(&mut bus);
 
@@ -804,7 +804,7 @@ mod tests {
 
     #[test]
     fn clv() {
-        let (mut cpu, mut bus, _ram) = fixture("CLV\n");
+        let (mut cpu, mut bus, _ram) = fixture("CLV");
         cpu.flags.set_overflow(true);
         cpu.tick(&mut bus);
 
@@ -813,7 +813,7 @@ mod tests {
 
     #[test]
     fn sec() {
-        let (mut cpu, mut bus, _ram) = fixture("SEC\n");
+        let (mut cpu, mut bus, _ram) = fixture("SEC");
         cpu.flags.set_carry(false);
         cpu.tick(&mut bus);
 
@@ -822,7 +822,7 @@ mod tests {
 
     #[test]
     fn sed() {
-        let (mut cpu, mut bus, _ram) = fixture("SED\n");
+        let (mut cpu, mut bus, _ram) = fixture("SED");
         cpu.flags.set_decimal_mode(false);
         cpu.tick(&mut bus);
 
@@ -831,7 +831,7 @@ mod tests {
 
     #[test]
     fn sei() {
-        let (mut cpu, mut bus, _ram) = fixture("SEI\n");
+        let (mut cpu, mut bus, _ram) = fixture("SEI");
         cpu.flags.set_interrupt_disabled(false);
         cpu.tick(&mut bus);
 
@@ -858,7 +858,7 @@ mod tests {
 
     #[test]
     fn bcc_backward() {
-        let (mut cpu, mut bus, _ram) = fixture("\n");
+        let (mut cpu, mut bus, _ram) = fixture("");
         //   NOP
         // notequal:
         //   NOP
@@ -989,13 +989,13 @@ mod tests {
 
     #[test]
     fn stack_init() {
-        let (cpu, _bus, _ram) = fixture("TSX\n");
+        let (cpu, _bus, _ram) = fixture("TSX");
         assert_eq!(cpu.sp, 0xff);
     }
 
     #[test]
     fn tsx() {
-        let (mut cpu, mut bus, _ram) = fixture("TSX\n");
+        let (mut cpu, mut bus, _ram) = fixture("TSX");
         cpu.sp = 0x15;
         cpu.tick(&mut bus);
 
@@ -1004,7 +1004,7 @@ mod tests {
 
     #[test]
     fn txs() {
-        let (mut cpu, mut bus, _ram) = fixture("TXS\n");
+        let (mut cpu, mut bus, _ram) = fixture("TXS");
         cpu.reg.x = 0x15;
         cpu.tick(&mut bus);
 
@@ -1013,7 +1013,7 @@ mod tests {
 
     #[test]
     fn pha() {
-        let (mut cpu, mut bus, _ram) = fixture("PHA\n");
+        let (mut cpu, mut bus, _ram) = fixture("PHA");
         cpu.reg.a = 0xAB;
         cpu.tick(&mut bus);
 
@@ -1023,7 +1023,7 @@ mod tests {
 
     #[test]
     fn php() {
-        let (mut cpu, mut bus, _ram) = fixture("PHP\n");
+        let (mut cpu, mut bus, _ram) = fixture("PHP");
         cpu.flags.set_register(0xAC);
         cpu.tick(&mut bus);
 
@@ -1033,7 +1033,7 @@ mod tests {
 
     #[test]
     fn pla() {
-        let (mut cpu, mut bus, _ram) = fixture("PLA\n");
+        let (mut cpu, mut bus, _ram) = fixture("PLA");
         bus.set_byte(0xAB, 0x01ff);
         cpu.sp = 0xfe;
         cpu.tick(&mut bus);
@@ -1044,7 +1044,7 @@ mod tests {
 
     #[test]
     fn plp() {
-        let (mut cpu, mut bus, _ram) = fixture("PLP\n");
+        let (mut cpu, mut bus, _ram) = fixture("PLP");
         bus.set_byte(0xAC, 0x01ff);
         cpu.sp = 0xfe;
         cpu.tick(&mut bus);
@@ -1055,35 +1055,16 @@ mod tests {
 
     #[test]
     fn jsr_rts() {
-        // asm6502 just can't parse this =(
-        // But code seems to be ok
-        let _instructions = r#"
-            JSR $0004
+        let (mut cpu, mut bus, _ram) = fixture(r#"
+            JSR $0009
             LDX #$ab
             NOP
             NOP
             NOP
-            BRK
+            NOP
             LDY #$bc
             RTS
-        "#;
-
-        // Given
-        let instructions = vec![
-            0x20, 0x09, 0x00, 0xa2, 0xab, 0xea, 0xea, 0xea, 0x00, 0xa0, 0xbc, 0x60,
-        ];
-
-        let max_memory = 0xffff;
-        let mut cpu = Cpu::new();
-        let mut bus = Bus::new();
-        let ram = Rc::new(RefCell::new(Ram::new(max_memory)));
-
-        (*ram).borrow_mut().set_memory(&instructions, 0).unwrap();
-        bus.connect_device(
-            Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>,
-            0,
-            max_memory as u16,
-        );
+        "#);
 
         // When
         for _ in 1..100 {
@@ -1100,7 +1081,7 @@ mod tests {
 
     #[test]
     fn cmp_greater() {
-        let (mut cpu, mut bus, _ram) = fixture("CMP #$44\n");
+        let (mut cpu, mut bus, _ram) = fixture("CMP #$44");
         cpu.reg.a = 0x45;
         cpu.tick(&mut bus);
 
@@ -1110,7 +1091,7 @@ mod tests {
 
     #[test]
     fn cmp_equal() {
-        let (mut cpu, mut bus, _ram) = fixture("CMP #$44\n");
+        let (mut cpu, mut bus, _ram) = fixture("CMP #$44");
         cpu.reg.a = 0x44;
         cpu.tick(&mut bus);
 
@@ -1120,7 +1101,7 @@ mod tests {
 
     #[test]
     fn cmx_greater() {
-        let (mut cpu, mut bus, _ram) = fixture("CPX #$44\n");
+        let (mut cpu, mut bus, _ram) = fixture("CPX #$44");
         cpu.reg.x = 0x45;
         cpu.tick(&mut bus);
 
@@ -1130,7 +1111,7 @@ mod tests {
 
     #[test]
     fn cmy_equal() {
-        let (mut cpu, mut bus, _ram) = fixture("CPY #$44\n");
+        let (mut cpu, mut bus, _ram) = fixture("CPY #$44");
         cpu.reg.y = 0x44;
         cpu.tick(&mut bus);
 
@@ -1140,7 +1121,7 @@ mod tests {
 
     #[test]
     fn cmy_greater() {
-        let (mut cpu, mut bus, _ram) = fixture("CPY #$44\n");
+        let (mut cpu, mut bus, _ram) = fixture("CPY #$44");
         cpu.reg.y = 0x45;
         cpu.tick(&mut bus);
 
@@ -1150,7 +1131,7 @@ mod tests {
 
     #[test]
     fn cmx_equal() {
-        let (mut cpu, mut bus, _ram) = fixture("CPX #$44\n");
+        let (mut cpu, mut bus, _ram) = fixture("CPX #$44");
         cpu.reg.x = 0x44;
         cpu.tick(&mut bus);
 
@@ -1384,7 +1365,7 @@ mod tests {
 
     #[test]
     fn brk_rti() {
-        let _instructions = r#"
+        let (mut cpu, mut bus, _ram) = fixture(r#"
             LDA #$05
             BRK
             LDX #$05
@@ -1392,24 +1373,9 @@ mod tests {
             NOP
             LDY #$05
             RTI
-        "#;
+        "#);
 
         // Given
-        let instructions = vec![
-            0xa9, 0x05, 0x00, 0xa2, 0x05, 0xea, 0xea, 0xa0, 0x05, 0x40
-        ];
-
-        let max_memory_offset = 0xffff as u16;
-        let mut cpu = Cpu::new();
-        let mut bus = Bus::new();
-        let ram = Rc::new(RefCell::new(Ram::new(max_memory_offset as usize + 1)));
-
-        (*ram).borrow_mut().set_memory(&instructions, 0).unwrap();
-        bus.connect_device(
-            Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>,
-            0,
-            max_memory_offset,
-        );
         bus.set_byte(0x07, 0xfffe);
         bus.set_byte(0x00, 0xffff);
 

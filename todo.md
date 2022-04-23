@@ -6,16 +6,16 @@
 [ ] Learn 6502 asm
 [ ] Load test cartridge
 [ ] Load cartridges
-[ ] Propper resetting routine
 
 # Upcoming
 [ ] Debugger
-[ ] CPU debug mode (like gdb)?
+[ ] Simple test program
+[ ] Run overflow test programm (http://6502.org/tutorials/vflag.html)
 
 # Current
-[ ] Simple test program
 
 # Done
+[x] Propper resetting routine
 [x] Cpu instructions
 [x] Flags
 [x] Page boundary
