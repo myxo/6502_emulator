@@ -4,6 +4,9 @@ mod flags;
 mod ops_lookup;
 mod ram;
 
+#[cfg(test)]
+mod asm_tests;
+
 #[macro_use]
 extern crate lazy_static;
 

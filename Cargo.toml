@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["myxo <klimov.ns@mail.ru>"]
 edition = "2021"
 
+
 [dependencies]
 #asm6502 = "0.1.2"
 asm6502 = { git = "https://github.com/myxo/asm6502", branch = "lables"}

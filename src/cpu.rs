@@ -11,15 +11,15 @@ fn merge_bytes(hi: u8, lo: u8) -> u16 {
 
 #[derive(Default, Clone, Copy)]
 pub struct Registers {
-    a: u8,
-    x: u8,
-    y: u8,
+    pub a: u8,
+    pub x: u8,
+    pub y: u8,
 }
 
 #[derive(Clone, Copy)]
 pub struct Cpu {
-    reg: Registers,
-    flags: Flags,
+    pub reg: Registers,
+    pub flags: Flags,
     pc: u16,
     sp: u8,
     cycle_left: u8,
@@ -55,20 +55,27 @@ impl Cpu {
         // TODO: takes 8 (?) cycles
     }
 
+    pub fn run_until_brk(&mut self, bus: &mut Bus) {
+        while !self.flags.break_cmd() {
+            self.tick(bus);
+        }
+    }
+
     pub fn tick(&mut self, bus: &mut Bus) {
-        println!("tick");
         if self.cycle_left > 0 {
             self.cycle_left -= 1;
             return;
         }
+        println!("------");
         let op_code = bus.get_byte(self.pc);
-        println!("opcode: {:#04X} ", op_code);
 
         let op = OPCODE_TABLE[op_code as usize];
         if op.is_none() {
             panic!("Unknown opcode: {:#04x}\n", op_code);
         }
         let op = op.unwrap();
+
+        println!("opcode: {} ({:#04X}) ", op.name, op_code);
 
         let (address, mut cross_page): (u16, bool) = match op.mode {
             AddressMode::Immediate => (self.pc + 1, false),
@@ -453,7 +460,7 @@ impl Cpu {
         self.sp = self.sp.wrapping_sub(1);
     }
 
-    fn read_u8_from_stack(&mut self, bus: &mut Bus) -> u8{
+    fn read_u8_from_stack(&mut self, bus: &mut Bus) -> u8 {
         self.sp = self.sp.wrapping_add(1);
         // println!("get byte from stack {:#04X}", 0x0100 + self.sp as u16);
         bus.get_byte(0x0100 + self.sp as u16)
@@ -469,7 +476,7 @@ impl Cpu {
         self.sp = self.sp.wrapping_sub(1);
     }
 
-    fn read_u16_from_stack(&mut self, bus: &mut Bus) -> u16{
+    fn read_u16_from_stack(&mut self, bus: &mut Bus) -> u16 {
         self.sp = self.sp.wrapping_add(1);
         let pc_lo: u16 = bus.get_byte(0x0100 + self.sp as u16) as u16;
         // println!("get byte {:#04X} from stack {:#04X}", pc_lo, 0x0100 + self.sp as u16);
@@ -485,8 +492,8 @@ impl Cpu {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::bus::Device;
     use crate::ram::Ram;
-    use crate::Device;
     use asm6502::assemble;
     use assert::*;
     use std::cell::RefCell;
@@ -858,20 +865,16 @@ mod tests {
 
     #[test]
     fn bcc_backward() {
-        let (mut cpu, mut bus, _ram) = fixture("");
-        //   NOP
-        // notequal:
-        //   NOP
-        //   BCC notequal
-
+        let (mut cpu, mut bus, _ram) = fixture(
+            r#"
+           NOP
+         notequal:
+           NOP
+           BCC notequal
+        "#,
+        );
         cpu.flags.set_carry(false);
-        // This is assembled code:
-        bus.set_byte(0xea, 0);
-        bus.set_byte(0xea, 1);
-        bus.set_byte(0x90, 2);
-        bus.set_byte(0xfd, 3);
 
-        //cpu.pc = 0xf0;
         cpu.tick(&mut bus);
         cpu.tick(&mut bus);
 
@@ -1055,7 +1058,8 @@ mod tests {
 
     #[test]
     fn jsr_rts() {
-        let (mut cpu, mut bus, _ram) = fixture(r#"
+        let (mut cpu, mut bus, _ram) = fixture(
+            r#"
             JSR $0009
             LDX #$ab
             NOP
@@ -1064,7 +1068,8 @@ mod tests {
             NOP
             LDY #$bc
             RTS
-        "#);
+        "#,
+        );
 
         // When
         for _ in 1..100 {
@@ -1365,7 +1370,8 @@ mod tests {
 
     #[test]
     fn brk_rti() {
-        let (mut cpu, mut bus, _ram) = fixture(r#"
+        let (mut cpu, mut bus, _ram) = fixture(
+            r#"
             LDA #$05
             BRK
             LDX #$05
@@ -1373,7 +1379,8 @@ mod tests {
             NOP
             LDY #$05
             RTI
-        "#);
+        "#,
+        );
 
         // Given
         bus.set_byte(0x07, 0xfffe);

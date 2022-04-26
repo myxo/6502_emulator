@@ -48,7 +48,10 @@ impl Bus {
                 }
             }
         }
-        panic!("Try to get memory, but device is not assign. Offset: {:#04X}", offset);
+        panic!(
+            "Try to get memory, but device is not assign. Offset: {:#04X}",
+            offset
+        );
     }
 
     pub fn get_bytes_slice(&self, from: u16, to: u16) -> Vec<u8> {
@@ -60,7 +63,10 @@ impl Bus {
                 }
             }
         }
-        panic!("Try to get memory, but device is not assign. From: {:#04X}, to: {:#04X}", from, to);
+        panic!(
+            "Try to get memory, but device is not assign. From: {:#04X}, to: {:#04X}",
+            from, to
+        );
     }
 
     pub fn get_two_bytes(&self, offset: u16) -> u16 {

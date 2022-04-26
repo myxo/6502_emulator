@@ -105,7 +105,7 @@ macro_rules! declare_op {
             mode: $mode,
             instruction_bytes: $bytes.0,
             cycles: $cycles.0,
-            name: stringify!(code),
+            name: stringify!($code).split_at(6).1,
             page_boundary_cycle: $check_bound == PageBound::Yes,
         })
     }};
@@ -115,7 +115,7 @@ macro_rules! declare_op {
             mode: $mode,
             instruction_bytes: $bytes.0,
             cycles: $cycles.0,
-            name: stringify!(code),
+            name: stringify!($code).split_at(6).1,
             page_boundary_cycle: false,
         })
     }};
