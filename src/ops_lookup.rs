@@ -2,6 +2,7 @@ use std::option::Option;
 
 #[derive(Clone, Copy)]
 #[allow(non_snake_case)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum Code {
     LDA,
     LDX,

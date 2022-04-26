@@ -29,7 +29,7 @@ impl Flags {
 
     pub fn set_carry(&mut self, flag: bool) {
         if flag != self.carry() {
-            self.register = self.register ^ CARRY_BIT;
+            self.register ^= CARRY_BIT;
         }
     }
 
@@ -44,7 +44,7 @@ impl Flags {
 
     pub fn set_zero(&mut self, flag: bool) {
         if flag != self.zero() {
-            self.register = self.register ^ ZERO_BIT;
+            self.register ^= ZERO_BIT;
         }
     }
 
@@ -59,7 +59,7 @@ impl Flags {
 
     pub fn set_interrupt_disabled(&mut self, flag: bool) {
         if flag != self.interrupt_disabled() {
-            self.register = self.register ^ INT_BIT;
+            self.register ^= INT_BIT;
         }
     }
 
@@ -74,7 +74,7 @@ impl Flags {
 
     pub fn set_decimal_mode(&mut self, flag: bool) {
         if flag != self.decimal_mode() {
-            self.register = self.register ^ DEC_BIT;
+            self.register ^= DEC_BIT;
         }
     }
 
@@ -91,7 +91,7 @@ impl Flags {
     #[allow(dead_code)]
     pub fn set_break_cmd(&mut self, flag: bool) {
         if flag != self.break_cmd() {
-            self.register = self.register ^ BRK_BIT;
+            self.register ^= BRK_BIT;
         }
     }
 
@@ -106,7 +106,7 @@ impl Flags {
 
     pub fn set_overflow(&mut self, flag: bool) {
         if flag != self.overflow() {
-            self.register = self.register ^ OVERFLOW_BIT;
+            self.register ^= OVERFLOW_BIT;
         }
     }
 
@@ -121,7 +121,7 @@ impl Flags {
 
     pub fn set_negative(&mut self, flag: bool) {
         if flag != self.negative() {
-            self.register = self.register ^ NEG_BIT;
+            self.register ^= NEG_BIT;
         }
     }
 

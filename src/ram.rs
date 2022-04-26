@@ -14,7 +14,7 @@ impl Ram {
         }
     }
 
-    pub fn set_memory(&mut self, data: &Vec<u8>, offset: u16) -> Result<(), SetMemoryError> {
+    pub fn set_memory(&mut self, data: &[u8], offset: u16) -> Result<(), SetMemoryError> {
         let offset = offset as usize;
         if offset + data.len() > self.memory.len() {
             return Err(SetMemoryError {});

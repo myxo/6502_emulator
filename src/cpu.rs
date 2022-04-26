@@ -219,23 +219,23 @@ impl Cpu {
                 self.update_n_z_flags(new_val);
             }
             Code::AND => {
-                self.reg.a = self.reg.a & bus.get_byte(address);
+                self.reg.a &= bus.get_byte(address);
                 self.update_n_z_flags(self.reg.a);
             }
             Code::EOR => {
-                self.reg.a = self.reg.a ^ bus.get_byte(address);
+                self.reg.a ^= bus.get_byte(address);
                 self.update_n_z_flags(self.reg.a);
             }
             Code::ORA => {
-                self.reg.a = self.reg.a | bus.get_byte(address);
+                self.reg.a |= bus.get_byte(address);
                 self.update_n_z_flags(self.reg.a);
             }
             Code::BIT => {
                 let mem = bus.get_byte(address);
                 // TODO: is this really accurate?
                 self.flags.set_zero(self.reg.a & mem == 0);
-                self.flags.set_negative(mem & 0b10000000 == 1);
-                self.flags.set_overflow(mem & 0b01000000 == 1);
+                self.flags.set_negative(mem & 0b10000000 != 0);
+                self.flags.set_overflow(mem & 0b01000000 != 0);
             }
             Code::CLC => {
                 self.flags.set_carry(false);
