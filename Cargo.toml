@@ -10,3 +10,4 @@ edition = "2021"
 asm6502 = { git = "https://github.com/myxo/asm6502", branch = "lables"}
 assert = "0.0.4"
 lazy_static = "1.4.0"
+sdl2 = "0.35"

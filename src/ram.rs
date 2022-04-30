@@ -38,6 +38,7 @@ impl Device for Ram {
     fn get_bytes_slice(&self, from: u16, to: u16) -> Vec<u8> {
         self.memory[from as usize..to as usize].to_vec()
     }
+    fn tick(&mut self) {}
 }
 
 #[cfg(test)]

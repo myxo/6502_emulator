@@ -4,6 +4,7 @@ use std::rc::Weak;
 pub trait Device {
     fn get_byte(&self, offset: u16) -> u8;
     fn set_byte(&mut self, byte: u8, offset: u16);
+    fn tick(&mut self);
 
     // Debug purpose
     fn get_bytes_slice(&self, from: u16, to: u16) -> Vec<u8>;
@@ -36,6 +37,14 @@ impl Bus {
                 if let Some(dev) = conn.device.upgrade() {
                     (*dev).borrow_mut().set_byte(byte, offset);
                 }
+            }
+        }
+    }
+
+    pub fn tick(&mut self) {
+        for conn in &mut self.connections {
+            if let Some(dev) = conn.device.upgrade() {
+                (*dev).borrow_mut().tick();
             }
         }
     }

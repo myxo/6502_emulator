@@ -194,12 +194,12 @@ impl Cpu {
                 self.update_n_z_flags(new_val);
             }
             Code::INX => {
-                let new_val = self.reg.x + 1;
+                let new_val = self.reg.x.overflowing_add(1).0;
                 self.reg.x = new_val;
                 self.update_n_z_flags(new_val);
             }
             Code::INY => {
-                let new_val = self.reg.y + 1;
+                let new_val = self.reg.y.overflowing_add(1).0;
                 self.reg.y = new_val;
                 self.update_n_z_flags(new_val);
             }
@@ -209,12 +209,12 @@ impl Cpu {
                 self.update_n_z_flags(new_val);
             }
             Code::DEX => {
-                let new_val = self.reg.x - 1;
+                let new_val = self.reg.x.overflowing_sub(1).0;
                 self.reg.x = new_val;
                 self.update_n_z_flags(new_val);
             }
             Code::DEY => {
-                let new_val = self.reg.y - 1;
+                let new_val = self.reg.y.overflowing_sub(1).0;
                 self.reg.y = new_val;
                 self.update_n_z_flags(new_val);
             }

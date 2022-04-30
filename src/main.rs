@@ -1,8 +1,10 @@
-pub mod bus;
+mod bus;
 mod cpu;
 mod flags;
 mod ops_lookup;
 mod ram;
+mod vic;
+mod c64;
 
 #[cfg(test)]
 mod asm_tests;
@@ -10,30 +12,50 @@ mod asm_tests;
 #[macro_use]
 extern crate lazy_static;
 
-use std::cell::RefCell;
-use std::rc::{Rc, Weak};
-
 use asm6502::assemble;
-use bus::{Bus, Device};
-use cpu::Cpu;
-use ram::Ram;
+use c64::C64;
+
+extern crate sdl2;
+
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use std::time::Duration;
 
 fn main() {
-    let mut cpu = Cpu::new();
-    let mut bus = Bus::new();
-    let ram = Rc::new(RefCell::new(Ram::new(0xffff)));
-
-    // let asm = "LDA #1\nADC #1\nCMP #2".as_bytes();
-    let asm = "LDA #1\nADC #1\nCMP #2".as_bytes();
+    let asm = r#"
+    LDX #0
+    loop:
+    INX
+    INX
+    STX $b000
+    NOP
+    CLC
+    BCC loop
+        "#.as_bytes();
     let mut buf = Vec::<u8>::new();
     if let Err(msg) = assemble(asm, &mut buf) {
         panic!("Failed to assemble: {}", msg);
     }
 
-    (*ram).borrow_mut().set_memory(&buf, 0).unwrap();
-    bus.connect_device(Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>, 0, 0xffff);
+    let sdl_context = sdl2::init().unwrap();
+    let mut event_pump = sdl_context.event_pump().unwrap();
 
-    for _ in 1..10 {
-        cpu.tick(&mut bus);
+    let mut c64 = C64::new(&sdl_context);
+    (*c64.ram).borrow_mut().set_memory(&buf, 0).unwrap();
+
+    'running: loop {
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit {..} |
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    break 'running
+                },
+                _ => {}
+            }
+        }
+        // The rest of the game loop goes here...
+
+        c64.tick();
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
