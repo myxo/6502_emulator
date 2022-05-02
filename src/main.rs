@@ -1,10 +1,11 @@
 mod bus;
+mod c64;
 mod cpu;
 mod flags;
+mod host_io;
 mod ops_lookup;
 mod ram;
 mod vic;
-mod c64;
 
 #[cfg(test)]
 mod asm_tests;
@@ -14,11 +15,16 @@ extern crate lazy_static;
 
 use asm6502::assemble;
 use c64::C64;
+use host_io::SdlHandler;
 
+extern crate gl;
+extern crate imgui;
+extern crate imgui_opengl_renderer;
+extern crate imgui_sdl2;
 extern crate sdl2;
 
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::Duration;
 
 fn main() {
@@ -31,31 +37,25 @@ fn main() {
     NOP
     CLC
     BCC loop
-        "#.as_bytes();
+"#
+    .as_bytes();
+
     let mut buf = Vec::<u8>::new();
-    if let Err(msg) = assemble(asm, &mut buf) {
-        panic!("Failed to assemble: {}", msg);
-    }
+    assemble(asm, &mut buf).unwrap();
 
-    let sdl_context = sdl2::init().unwrap();
-    let mut event_pump = sdl_context.event_pump().unwrap();
+    let sdl_handler = Rc::new(RefCell::new(SdlHandler::new()));
 
-    let mut c64 = C64::new(&sdl_context);
+    let mut c64 = C64::new(sdl_handler.clone());
     (*c64.ram).borrow_mut().set_memory(&buf, 0).unwrap();
 
     'running: loop {
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit {..} |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    break 'running
-                },
-                _ => {}
-            }
+        if !sdl_handler.borrow_mut().process_events() {
+            break 'running;
         }
-        // The rest of the game loop goes here...
 
         c64.tick();
+        sdl_handler.borrow_mut().render_screen();
+        //deb_window.gl_swap_window();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
