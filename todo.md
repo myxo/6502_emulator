@@ -6,15 +6,21 @@
 [ ] Learn 6502 asm
 [ ] Load test cartridge
 [ ] Load cartridges
+[ ] Debugger breakpoints
+[ ] Debugger disass
 
 # Upcoming
+[ ] VIC registers parsing
+[ ] VIC simplest char mode
 [ ] Debugger
-[ ] Simple test program
-[ ] Run overflow test programm (http://6502.org/tutorials/vflag.html)
 
 # Current
+[ ] Debugger layout
+[ ] Debugger switch by argv
 
 # Done
+[c] Run overflow test programm (http://6502.org/tutorials/vflag.html)
+[x] Simple test program
 [x] Propper resetting routine
 [x] Cpu instructions
 [x] Flags

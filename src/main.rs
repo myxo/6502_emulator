@@ -6,21 +6,15 @@ mod host_io;
 mod ops_lookup;
 mod ram;
 mod vic;
-
-#[cfg(test)]
 mod asm_tests;
-
-#[macro_use]
-extern crate lazy_static;
 
 use asm6502::assemble;
 use c64::C64;
 use host_io::SdlHandler;
 
-extern crate gl;
-extern crate imgui;
-extern crate imgui_opengl_renderer;
-extern crate imgui_sdl2;
+#[macro_use]
+extern crate lazy_static;
+
 extern crate sdl2;
 
 use std::cell::RefCell;
@@ -55,7 +49,7 @@ fn main() {
 
         c64.tick();
         sdl_handler.borrow_mut().render_screen();
-        //deb_window.gl_swap_window();
+
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
