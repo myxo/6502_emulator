@@ -98,7 +98,7 @@ impl Monitor for SdlHandler {
 
     fn set_symbol(&mut self, x: u16, y: u16, s: char, color: Color) {
         let color = sdl2::pixels::Color::RGB(x as u8, x as u8, x as u8);
-        //println!("color: {:?}", color);
+        trace!("color: {:?}", color);
         self.canvas.set_draw_color(color);
         self.canvas.clear();
     }

@@ -21,12 +21,12 @@ impl DebuggerServer {
             let address = "127.0.0.1:7878";
             let listener = TcpListener::bind(address).unwrap();
 
-            println!("Debug server opened at http://{address}");
+            info!("Debug server opened at http://{address}");
 
             for stream in listener.incoming() {
                 let mut stream = stream.unwrap();
 
-                println!("Connection established!");
+                info!("Connection established!");
                 //loop {
                     // TODO: buffer size?
                     let mut buffer = [0; 1024];
@@ -36,7 +36,7 @@ impl DebuggerServer {
                     let mut headers = [httparse::EMPTY_HEADER; 16];
                     let mut req = httparse::Request::new(&mut headers);
                     let _ = req.parse(&buffer).unwrap();
-                    println!("\n\nReq path is: {}", req.path.unwrap());
+                    debug!("\n\nReq path is: {}", req.path.unwrap());
 
                     req_tx.send(Request::CpuState{}).unwrap();
 

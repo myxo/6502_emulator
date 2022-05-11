@@ -15,6 +15,7 @@ use debug_server::DebuggerServer;
 use host_io::SdlHandler;
 
 #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate log;
 extern crate sdl2;
 extern crate serde;
 
@@ -33,6 +34,21 @@ struct CpuState {
 }
 
 fn main() {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{}[{}] {}",
+                chrono::Local::now().format("[%H:%M:%S]"),
+                //record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Trace)
+        .chain(std::io::stdout())
+        .apply()
+        .unwrap();
+
     let asm = r#"
     LDX #0
     loop:

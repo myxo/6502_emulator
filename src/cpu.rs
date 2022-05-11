@@ -66,7 +66,7 @@ impl Cpu {
             self.cycle_left -= 1;
             return;
         }
-        println!("------");
+        trace!("------------");
         let op_code = bus.get_byte(self.pc);
 
         let op = OPCODE_TABLE[op_code as usize];
@@ -75,7 +75,7 @@ impl Cpu {
         }
         let op = op.unwrap();
 
-        println!("opcode: {} ({:#04X}) ", op.name, op_code);
+        trace!("opcode: {} ({:#04X}) ", op.name, op_code);
 
         let (address, mut cross_page): (u16, bool) = match op.mode {
             AddressMode::Immediate => (self.pc + 1, false),
@@ -135,7 +135,7 @@ impl Cpu {
             }
             AddressMode::Accumulator => (0, false),
         };
-        println!("look at address: {:#04X} ", address);
+        trace!("look at address: {:#04X} ", address);
 
         self.pc += op.instruction_bytes as u16;
         let mut additional_cycles = 0;
