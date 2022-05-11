@@ -1,6 +1,7 @@
 use crate::bus::Device;
 use crate::host_io::{Color, Monitor};
 
+use std::sync::{Arc, Mutex};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -49,8 +50,7 @@ impl Device for SimpleVic {
 
     fn tick(&mut self) {
         let x = self.memory[0];
-        self.monitor
-            .borrow_mut()
-            .set_symbol(x as u16, 0, 'a', Color::Red);
+        let mut mon = self.monitor.borrow_mut();
+        mon.set_symbol(x as u16, 0, 'a', Color::Red);
     }
 }

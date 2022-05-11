@@ -1,5 +1,4 @@
-use std::cell::RefCell;
-use std::rc::Weak;
+use std::sync::{Mutex, Weak};
 
 pub trait Device {
     fn get_byte(&self, offset: u16) -> u8;
@@ -11,7 +10,7 @@ pub trait Device {
 }
 
 struct DeviceConnection {
-    device: Weak<RefCell<dyn Device>>,
+    device: Weak<Mutex<dyn Device>>,
     from: u16,
     to: u16,
 }
@@ -27,7 +26,7 @@ impl Bus {
         }
     }
 
-    pub fn connect_device(&mut self, device: Weak<RefCell<dyn Device>>, from: u16, to: u16) {
+    pub fn connect_device(&mut self, device: Weak<Mutex<dyn Device>>, from: u16, to: u16) {
         self.connections.push(DeviceConnection { device, from, to })
     }
 
@@ -35,7 +34,7 @@ impl Bus {
         for conn in &mut self.connections {
             if offset >= conn.from && offset <= conn.to {
                 if let Some(dev) = conn.device.upgrade() {
-                    (*dev).borrow_mut().set_byte(byte, offset);
+                    (*dev).lock().unwrap().set_byte(byte, offset);
                 }
             }
         }
@@ -44,7 +43,7 @@ impl Bus {
     pub fn tick(&mut self) {
         for conn in &mut self.connections {
             if let Some(dev) = conn.device.upgrade() {
-                (*dev).borrow_mut().tick();
+                (*dev).lock().unwrap().tick();
             }
         }
     }
@@ -53,7 +52,7 @@ impl Bus {
         for conn in &self.connections {
             if offset >= conn.from && offset <= conn.to {
                 if let Some(dev) = conn.device.upgrade() {
-                    return (*dev).borrow().get_byte(offset);
+                    return (*dev).lock().unwrap().get_byte(offset);
                 }
             }
         }
@@ -68,7 +67,7 @@ impl Bus {
         for conn in &self.connections {
             if from >= conn.from && to <= conn.to {
                 if let Some(dev) = conn.device.upgrade() {
-                    return (*dev).borrow().get_bytes_slice(from, to);
+                    return (*dev).lock().unwrap().get_bytes_slice(from, to);
                 }
             }
         }

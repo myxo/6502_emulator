@@ -4,14 +4,15 @@ use crate::host_io::Monitor;
 use crate::ram::Ram;
 use crate::vic::SimpleVic;
 
+use std::sync::{Arc, Weak, Mutex};
 use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 
 pub struct C64 {
     pub cpu: Cpu,
     pub bus: Bus,
-    pub vic: Rc<RefCell<SimpleVic>>,
-    pub ram: Rc<RefCell<Ram>>,
+    pub vic: Arc<Mutex<SimpleVic>>,
+    pub ram: Arc<Mutex<Ram>>,
 }
 
 impl C64 {
@@ -19,17 +20,17 @@ impl C64 {
         let mut c64 = Self {
             cpu: Cpu::new(),
             bus: Bus::new(),
-            vic: Rc::new(RefCell::new(SimpleVic::new(monitor, 100))),
-            ram: Rc::new(RefCell::new(Ram::new(0xffff + 1))),
+            vic: Arc::new(Mutex::new(SimpleVic::new(monitor, 100))),
+            ram: Arc::new(Mutex::new(Ram::new(0xffff + 1))),
         };
 
         c64.bus.connect_device(
-            Rc::downgrade(&c64.ram) as Weak<RefCell<dyn Device>>,
+            Arc::downgrade(&c64.ram) as Weak<Mutex<dyn Device>>,
             0,
             0xafff,
         );
         c64.bus.connect_device(
-            Rc::downgrade(&c64.vic) as Weak<RefCell<dyn Device>>,
+            Arc::downgrade(&c64.vic) as Weak<Mutex<dyn Device>>,
             0xb000,
             0xb100,
         );
