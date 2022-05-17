@@ -59,7 +59,6 @@ impl SdlHandler {
 
         let canvas = window.into_canvas().build().unwrap();
 
-
         Self {
             canvas,
             event_pump,

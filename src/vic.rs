@@ -1,9 +1,9 @@
 use crate::bus::Device;
 use crate::host_io::{Color, Monitor};
 
-use std::sync::{Arc, Mutex};
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 pub struct SimpleVic {
     pub memory: Vec<u8>,

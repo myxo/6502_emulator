@@ -4,9 +4,9 @@ use crate::host_io::Monitor;
 use crate::ram::Ram;
 use crate::vic::SimpleVic;
 
-use std::sync::{Arc, Weak, Mutex};
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex, Weak};
 
 pub struct C64 {
     pub cpu: Cpu,

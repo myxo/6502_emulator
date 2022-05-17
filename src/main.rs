@@ -1,21 +1,23 @@
+mod asm_tests;
 mod bus;
 mod c64;
 mod cpu;
+mod debug_server;
 mod flags;
 mod host_io;
 mod ops_lookup;
 mod ram;
 mod vic;
-mod asm_tests;
-mod debug_server;
 
 use asm6502::assemble;
 use c64::C64;
 use debug_server::DebuggerServer;
 use host_io::SdlHandler;
 
-#[macro_use] extern crate lazy_static;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate log;
 extern crate sdl2;
 extern crate serde;
 
@@ -71,7 +73,6 @@ fn main() {
 
     let mut debug_server = DebuggerServer::new();
 
-
     'running: loop {
         if !sdl_handler.borrow_mut().process_events() {
             break 'running;
@@ -85,18 +86,17 @@ fn main() {
 
             let responce = match req {
                 Request::CpuState => {
-                    let state = CpuState { 
+                    let state = CpuState {
                         a: c64.cpu.reg.a,
                         x: c64.cpu.reg.x,
                         y: c64.cpu.reg.y,
                     };
                     serde_json::to_string(&state).unwrap()
-                },
+                }
             };
 
             debug_server.set_responce(responce.to_owned());
         }
-
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
