@@ -59,7 +59,7 @@ mod debugger_client {
             let link = ctx.link().clone();
             //let resp = reqwest::blocking::get("http://127.0.0.1:7878").unwrap().text().unwrap();
             wasm_bindgen_futures::spawn_local(async move {
-                let fetched_asm: CpuState = reqwasm::http::Request::get("http://127.0.0.1:7878")
+                let fetched_asm: CpuState = reqwasm::http::Request::get("http://127.0.0.1:7878/get_cpu_state")
                     .send()
                     .await
                     .unwrap()

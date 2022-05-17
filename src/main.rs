@@ -2,6 +2,7 @@ mod asm_tests;
 mod bus;
 mod c64;
 mod cpu;
+mod debugger;
 mod debug_server;
 mod flags;
 mod host_io;
@@ -14,42 +15,17 @@ use c64::C64;
 use debug_server::DebuggerServer;
 use host_io::SdlHandler;
 
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate lazy_static;
+#[macro_use] extern crate log;
 extern crate sdl2;
 extern crate serde;
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize)]
-struct CpuState {
-    a: u8,
-    y: u8,
-    x: u8,
-}
-
 fn main() {
-    fern::Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "{}[{}] {}",
-                chrono::Local::now().format("[%H:%M:%S]"),
-                //record.target(),
-                record.level(),
-                message
-            ))
-        })
-        .level(log::LevelFilter::Debug)
-        .chain(std::io::stdout())
-        .apply()
-        .unwrap();
+    configure_log();
 
     let asm = r#"
     LDX #0
@@ -82,22 +58,28 @@ fn main() {
         sdl_handler.borrow_mut().render_screen();
 
         if let Some(req) = debug_server.get_request() {
-            use debug_server::Request;
+            let responce = debugger::process_command(&c64, req);
 
-            let responce = match req {
-                Request::CpuState => {
-                    let state = CpuState {
-                        a: c64.cpu.reg.a,
-                        x: c64.cpu.reg.x,
-                        y: c64.cpu.reg.y,
-                    };
-                    serde_json::to_string(&state).unwrap()
-                }
-            };
-
-            debug_server.set_responce(responce.to_owned());
+            debug_server.set_responce(responce.unwrap());
         }
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
+}
+
+fn configure_log() {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{}[{}] {}",
+                chrono::Local::now().format("[%H:%M:%S]"),
+                //record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Debug)
+        .chain(std::io::stdout())
+        .apply()
+        .unwrap();
 }

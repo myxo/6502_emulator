@@ -1,6 +1,5 @@
-use crate::c64::C64;
+use crate::debugger::Request;
 use std::sync::mpsc::{self, Receiver, Sender};
-use std::sync::{Arc, Mutex};
 
 use std::io::*;
 use std::net::{TcpListener, TcpStream};
@@ -9,6 +8,23 @@ pub struct DebuggerServer {
     thread_handle: std::thread::JoinHandle<()>,
     req_rx: Receiver<Request>,
     res_tx: Sender<String>,
+}
+
+macro_rules! parse_req {
+    ($path: expr, $check_path: expr, $req_type:expr) => {{
+        if $path.starts_with($check_path) {
+            return Some($req_type);
+        }
+    }};
+}
+
+fn parse_request(path: &str) -> Option<Request>{
+    parse_req!(path, "/get_cpu_state", Request::CpuState{});
+    parse_req!(path, "/get_vic_state", Request::VicState{});
+    parse_req!(path, "/memory", Request::Memory{});
+    parse_req!(path, "/dissasembly", Request::Dissasembly{});
+    parse_req!(path, "/screen_texture", Request::ScreenTexture{});
+    None
 }
 
 impl DebuggerServer {
@@ -37,14 +53,24 @@ impl DebuggerServer {
                 let _ = req.parse(&buffer).unwrap();
                 debug!("\n\nReq path is: {}", req.path.unwrap());
 
-                req_tx.send(Request::CpuState {}).unwrap();
+                let req = parse_request(req.path.unwrap());
 
-                let body = res_rx.recv().unwrap();
-                let response = format!(
-                    "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\n{}\r\n\r\n{}",
-                    body.len(),
-                    body
-                );
+                let response = match req {
+                    Some(req) => {
+                        req_tx.send(req).unwrap();
+
+                        let body = res_rx.recv().unwrap();
+                        format!(
+                            "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\n{}\r\n\r\n{}",
+                            body.len(),
+                            body
+                        )
+                    },
+                    None => {
+                        format!("HTTP/1.1 400 Bad Request\r\nAccess-Control-Allow-Origin: *\r\n\r\n")
+                    }
+                };
+
                 debug!("Send response: {:?}", response);
                 stream.write(response.as_bytes()).unwrap();
                 stream.flush().unwrap();
@@ -72,6 +98,3 @@ impl DebuggerServer {
     }
 }
 
-pub enum Request {
-    CpuState,
-}
