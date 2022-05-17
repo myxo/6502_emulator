@@ -44,7 +44,7 @@ fn main() {
                 message
             ))
         })
-        .level(log::LevelFilter::Trace)
+        .level(log::LevelFilter::Debug)
         .chain(std::io::stdout())
         .apply()
         .unwrap();

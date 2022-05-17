@@ -41,7 +41,8 @@ impl DebuggerServer {
                     req_tx.send(Request::CpuState{}).unwrap();
 
                     let body = res_rx.recv().unwrap();
-                    let response = format!("HTTP/1.1 200 OK\r\n{}\r\n\r\n{}", body.len(), body);
+                    let response = format!("HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\n{}\r\n\r\n{}", body.len(), body);
+                    debug!("Send response: {:?}", response);
                     stream.write(response.as_bytes()).unwrap();
                     stream.flush().unwrap();
                 //}
