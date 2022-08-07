@@ -36,8 +36,7 @@ fn main() {
     NOP
     CLC
     BCC loop
-"#
-    .as_bytes();
+"#;
 
     let mut buf = Vec::<u8>::new();
     assemble(asm, &mut buf).unwrap();

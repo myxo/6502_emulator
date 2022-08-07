@@ -7,24 +7,22 @@ mod tests {
     use crate::ram::Ram;
     use asm6502::assemble;
     use assert::*;
-    use std::cell::RefCell;
-    use std::rc::{Rc, Weak};
+    use std::sync::{Arc, Mutex, Weak};
 
-    fn fixture(asm: &'static str) -> (Cpu, Bus, Rc<RefCell<Ram>>) {
+    fn fixture(asm: &'static str) -> (Cpu, Bus, Arc<Mutex<Ram>>) {
         let max_memory = 0xffff;
         let cpu = Cpu::new();
         let mut bus = Bus::new();
-        let ram = Rc::new(RefCell::new(Ram::new(max_memory + 1)));
+        let ram = Arc::new(Mutex::new(Ram::new(max_memory + 1)));
 
         let mut buf = Vec::<u8>::new();
-        let asm = asm.as_bytes();
         assert_ok!(assemble(asm, &mut buf));
 
         println!("Assembled code: {:X?}", buf);
 
-        (*ram).borrow_mut().set_memory(&buf, 0).unwrap();
+        (*ram).lock().unwrap().set_memory(&buf, 0).unwrap();
         bus.connect_device(
-            Rc::downgrade(&ram) as Weak<RefCell<dyn Device>>,
+            Arc::downgrade(&ram) as Weak<Mutex<dyn Device>>,
             0,
             max_memory as u16,
         );
